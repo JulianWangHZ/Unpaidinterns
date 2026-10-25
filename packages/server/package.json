@@ -1,0 +1,19 @@
+{
+  "name": "@unpaidinterns/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "UI_URL=http://localhost:5173 tsx watch src/main.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.17",
+    "@hono/node-ws": "^1.3.1",
+    "@unpaidinterns/collector": "workspace:*",
+    "@unpaidinterns/core": "workspace:*",
+    "hono": "^4.13.14"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.2",
+    "ws": "^8.22.0"
+  }
+}
