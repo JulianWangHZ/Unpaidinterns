@@ -32,6 +32,11 @@ export class SessionHub {
     };
   }
 
+  /** Sends a message that is not derived from session events, such as the task list. */
+  broadcast(message: ServerMessage): void {
+    this.#emit(message);
+  }
+
   #emit(message: ServerMessage): void {
     for (const listener of this.#listeners) listener(message);
   }

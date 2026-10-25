@@ -10,6 +10,7 @@ import { createClaudeParser, createCodexParser, startCollector, type SourceConfi
 import { createApp } from './app.js';
 import { startDemo } from './demo.js';
 import { SessionHub } from './session-hub.js';
+import { JsonTaskRepository } from './task-repository.js';
 
 const IDLE_MS = 30 * 60 * 1000;
 const SWEEP_MS = 60 * 1000;
@@ -38,7 +39,11 @@ function main(): void {
   const sessionSecret = randomBytes(32).toString('base64url');
 
   const hub = new SessionHub();
-  const { app, injectWebSocket } = createApp({ hub, linkToken, sessionSecret });
+  const dataDir = process.env.UNPAIDINTERNS_DATA_DIR ?? join(homedir(), '.unpaidinterns');
+  const tasks = new JsonTaskRepository(join(dataDir, 'tasks.json'), {
+    onCorrupt: (backup) => console.warn(`tasks.json was unreadable. It was moved to ${backup} and a new list was started.`),
+  });
+  const { app, injectWebSocket } = createApp({ hub, tasks, linkToken, sessionSecret });
   const webDist = fileURLToPath(new URL('../../../apps/web/dist', import.meta.url));
   app.use('/*', serveStatic({ root: relative(process.cwd(), webDist) }));
 

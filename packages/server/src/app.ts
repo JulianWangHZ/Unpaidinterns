@@ -4,16 +4,19 @@ import { Hono, type MiddlewareHandler } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
 import { createLinkAuth, tokensMatch } from './auth.js';
 import type { SessionHub } from './session-hub.js';
+import type { TaskRepository } from './task-repository.js';
+import { taskRoutes } from './task-routes.js';
 
 export const AUTH_COOKIE = 'ui_session';
 
 export interface AppOptions {
   hub: SessionHub;
+  tasks?: TaskRepository;
   linkToken: string;
   sessionSecret: string;
 }
 
-export function createApp({ hub, linkToken, sessionSecret }: AppOptions) {
+export function createApp({ hub, tasks, linkToken, sessionSecret }: AppOptions) {
   const app = new Hono();
   const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
   const linkAuth = createLinkAuth(linkToken);
@@ -39,6 +42,7 @@ export function createApp({ hub, linkToken, sessionSecret }: AppOptions) {
   });
 
   app.get('/api/sessions', requireSession, (c) => c.json({ sessions: hub.sessions() }));
+  if (tasks) app.route('/api/tasks', taskRoutes(tasks, requireSession, (message) => hub.broadcast(message)));
 
   app.get(
     '/ws',
@@ -46,9 +50,11 @@ export function createApp({ hub, linkToken, sessionSecret }: AppOptions) {
     upgradeWebSocket(() => {
       let unsubscribe: (() => void) | undefined;
       return {
-        onOpen(_event, ws) {
-          ws.send(JSON.stringify({ type: 'snapshot', sessions: hub.sessions() }));
+        async onOpen(_event, ws) {
+          // Subscribe and send the snapshot in the same tick so no session update falls in between.
           unsubscribe = hub.subscribe((message) => ws.send(JSON.stringify(message)));
+          ws.send(JSON.stringify({ type: 'snapshot', sessions: hub.sessions() }));
+          if (tasks) ws.send(JSON.stringify({ type: 'tasks', tasks: await tasks.list() }));
         },
         onClose() {
           unsubscribe?.();

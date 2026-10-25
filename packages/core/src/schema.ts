@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { taskSchema } from './task.js';
 
 export const agentKindSchema = z.enum(['claude', 'codex', 'gemini']);
 export type AgentKind = z.infer<typeof agentKindSchema>;
@@ -38,5 +39,6 @@ export const serverMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('snapshot'), sessions: z.array(sessionSchema) }),
   z.object({ type: z.literal('upsert'), session: sessionSchema }),
   z.object({ type: z.literal('remove'), sessionId: z.string().min(1) }),
+  z.object({ type: z.literal('tasks'), tasks: z.array(taskSchema) }),
 ]);
 export type ServerMessage = z.infer<typeof serverMessageSchema>;
