@@ -3,11 +3,11 @@ import { stat } from 'node:fs/promises';
 import { watch, type FSWatcher } from 'chokidar';
 import type { AgentEvent } from '@unpaidinterns/core';
 import { FileTailer } from './tailer.js';
-import type { LineParser } from './types.js';
+import type { LineParser, ParserFactory } from './types.js';
 
 export interface SourceConfig {
   dir: string;
-  parse: LineParser;
+  createParser: ParserFactory;
 }
 
 export interface ParseIssue {
@@ -36,13 +36,23 @@ export function startCollector(options: CollectorOptions): Collector {
   const now = options.now ?? Date.now;
   // One promise chain per file so overlapping change events never read the same bytes twice.
   const queues = new Map<string, Promise<void>>();
+  const parsers = new Map<string, LineParser>();
+
+  function parserFor(source: SourceConfig, filePath: string): LineParser {
+    const existing = parsers.get(filePath);
+    if (existing) return existing;
+    const created = source.createParser(filePath);
+    parsers.set(filePath, created);
+    return created;
+  }
 
   async function readFile(source: SourceConfig, filePath: string, stats?: Stats): Promise<void> {
     const mtimeMs = stats?.mtimeMs ?? (await stat(filePath)).mtimeMs;
     if (now() - mtimeMs > options.maxFileAgeMs) return;
     const lines = await tailer.readNewLines(filePath);
+    const parse = parserFor(source, filePath);
     for (const line of lines) {
-      const result = source.parse(line, { filePath });
+      const result = parse(line);
       if (result.kind === 'event') options.onEvent(result.event);
       else if (result.kind === 'error') options.onParseError?.({ filePath, reason: result.reason });
     }
@@ -61,7 +71,10 @@ export function startCollector(options: CollectorOptions): Collector {
     watch(source.dir, { ignoreInitial: false, usePolling: options.usePolling ?? false, interval: 100 })
       .on('add', (filePath, stats) => enqueue(source, filePath, stats))
       .on('change', (filePath, stats) => enqueue(source, filePath, stats))
-      .on('unlink', (filePath) => tailer.forget(filePath)),
+      .on('unlink', (filePath) => {
+        tailer.forget(filePath);
+        parsers.delete(filePath);
+      }),
   );
 
   const ready = Promise.all(

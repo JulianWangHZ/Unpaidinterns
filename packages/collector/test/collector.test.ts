@@ -3,17 +3,17 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { AgentEvent } from '@unpaidinterns/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { startCollector, type Collector, type LineParser, type ParseIssue } from '../src/index.js';
+import { startCollector, type Collector, type ParseIssue, type ParserFactory } from '../src/index.js';
 
 const HOUR = 60 * 60 * 1000;
 
 // A tiny parser so these tests exercise the collector, not the Claude adapter.
-const parse: LineParser = (line, ctx) => {
+const createParser: ParserFactory = (filePath) => (line) => {
   if (line === 'bad') return { kind: 'error', reason: 'bad line' };
   if (line === 'skip') return { kind: 'skip' };
   return {
     kind: 'event',
-    event: { agent: 'claude', sessionId: line, cwd: ctx.filePath, project: 'p', state: 'thinking', ts: 1 },
+    event: { agent: 'claude', sessionId: line, cwd: filePath, project: 'p', state: 'thinking', ts: 1 },
   };
 };
 
@@ -24,7 +24,7 @@ let issues: ParseIssue[];
 
 async function start(): Promise<void> {
   collector = startCollector({
-    sources: [{ dir, parse }],
+    sources: [{ dir, createParser }],
     onEvent: (event) => events.push(event),
     onParseError: (issue) => issues.push(issue),
     maxFileAgeMs: HOUR,

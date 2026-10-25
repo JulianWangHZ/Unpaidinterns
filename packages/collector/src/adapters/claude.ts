@@ -1,11 +1,10 @@
 import { basename } from 'node:path';
 import { projectName, type AgentEvent, type SessionState } from '@unpaidinterns/core';
-import type { LineParser, ParseResult } from '../types.js';
+import type { LineContext, ParseResult, ParserFactory } from '../types.js';
+import { DETAIL_MAX, toolLabel, truncate } from './text.js';
 
 const WAITING_TOOLS = new Set(['AskUserQuestion', 'ExitPlanMode']);
 const INTERRUPT_PREFIX = '[Request interrupted by user';
-const DETAIL_MAX = 120;
-const TOOL_ARG_MAX = 60;
 const SKIP: ParseResult = { kind: 'skip' };
 
 interface ContentBlock {
@@ -36,17 +35,13 @@ interface StatePart {
   detail?: string;
 }
 
-function truncate(text: string, max: number): string {
-  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
-}
-
 function describeTool(name: string, input: Record<string, unknown>): string {
   const { command, file_path: filePath, pattern } = input;
   let arg: string | undefined;
   if (typeof command === 'string') arg = command;
   else if (typeof filePath === 'string') arg = basename(filePath);
   else if (typeof pattern === 'string') arg = pattern;
-  return arg ? `${name}: ${truncate(arg, TOOL_ARG_MAX)}` : name;
+  return toolLabel(name, arg);
 }
 
 function assistantState(message: ClaudeMessage | undefined): StatePart | null {
@@ -88,7 +83,7 @@ function sessionIds(sessionId: string, isSidechain: boolean, filePath: string) {
   return { sessionId: `${sessionId}/${basename(filePath, '.jsonl')}`, parentSessionId: sessionId };
 }
 
-export const parseClaudeLine: LineParser = (line, ctx) => {
+export function parseClaudeLine(line: string, ctx: LineContext): ParseResult {
   if (line.trim() === '') return SKIP;
   let raw: ClaudeLine;
   try {
@@ -115,4 +110,6 @@ export const parseClaudeLine: LineParser = (line, ctx) => {
     ts,
   };
   return { kind: 'event', event };
-};
+}
+
+export const createClaudeParser: ParserFactory = (filePath) => (line) => parseClaudeLine(line, { filePath });

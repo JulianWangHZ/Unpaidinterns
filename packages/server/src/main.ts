@@ -6,7 +6,7 @@ import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { parseClaudeLine, startCollector, type SourceConfig } from '@unpaidinterns/collector';
+import { createClaudeParser, createCodexParser, startCollector, type SourceConfig } from '@unpaidinterns/collector';
 import { createApp } from './app.js';
 import { startDemo } from './demo.js';
 import { SessionHub } from './session-hub.js';
@@ -22,10 +22,10 @@ function readPort(raw: string): number {
   return port;
 }
 
-function claudeSource(): SourceConfig | null {
-  const dir = join(homedir(), '.claude', 'projects');
-  if (existsSync(dir)) return { dir, parse: parseClaudeLine };
-  console.log('Claude Code: not installed (no ~/.claude/projects)');
+function localSource(label: string, segments: string[], createParser: SourceConfig['createParser']): SourceConfig | null {
+  const dir = join(homedir(), ...segments);
+  if (existsSync(dir)) return { dir, createParser };
+  console.log(`${label}: not installed (no ~/${segments.join('/')})`);
   return null;
 }
 
@@ -48,7 +48,10 @@ function main(): void {
   if (values.demo) {
     startDemo(hub);
   } else {
-    const sources = [claudeSource()].filter((source): source is SourceConfig => source !== null);
+    const sources = [
+      localSource('Claude Code', ['.claude', 'projects'], createClaudeParser),
+      localSource('Codex', ['.codex', 'sessions'], createCodexParser),
+    ].filter((source): source is SourceConfig => source !== null);
     const parseErrors = new Map<string, number>();
     startCollector({
       sources,
