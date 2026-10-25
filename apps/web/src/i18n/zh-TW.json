@@ -1,0 +1,51 @@
+{
+  "nav": { "island": "島", "board": "看板", "label": "檢視" },
+  "filter": { "allProjects": "所有專案", "search": "搜尋任務", "agents": "顯示 agent" },
+  "language": { "switch": "EN", "label": "切換成英文" },
+  "connection": { "reconnecting": "重新連線中…" },
+  "column": { "todo": "待辦", "doing": "進行中", "done": "完成" },
+  "board": {
+    "add": "新增任務",
+    "addPlaceholder": "要做什麼？",
+    "create": "建立任務",
+    "cancel": "取消",
+    "emptyColumn": "把任務拖到這裡開始",
+    "saveFailed": "儲存失敗：{{message}}。看板已重新載入。"
+  },
+  "card": {
+    "noAgent": "還沒指派 agent",
+    "moveToDone": "移到完成",
+    "reply": "回覆 {{agent}}",
+    "ended_one": "{{count}} 個 session 已結束",
+    "ended_other": "{{count}} 個 session 已結束",
+    "edit": "編輯「{{title}}」"
+  },
+  "editor": {
+    "heading": "編輯任務",
+    "title": "標題",
+    "note": "備註",
+    "project": "專案",
+    "sessions": "Agent session",
+    "noSessions": "目前沒有進行中的 session。啟動 agent 後就會出現在這裡。",
+    "save": "儲存任務",
+    "delete": "刪除任務",
+    "cancel": "取消"
+  },
+  "state": {
+    "thinking": "思考中",
+    "running": "執行中",
+    "writing": "回覆中",
+    "waiting": "等你回覆",
+    "done": "完成",
+    "interrupted": "已中斷",
+    "error": "錯誤",
+    "idle": "閒置"
+  },
+  "list": {
+    "needsYou": "等你回覆",
+    "working": "工作中",
+    "resting": "休息中",
+    "intern": "實習生",
+    "empty": "目前沒有進行中的 session。在任何專案啟動 Claude Code 或 Codex 就會出現在這裡。"
+  }
+}

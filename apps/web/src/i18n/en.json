@@ -1,0 +1,51 @@
+{
+  "nav": { "island": "Island", "board": "Board", "label": "View" },
+  "filter": { "allProjects": "All projects", "search": "Search tasks", "agents": "Show agents" },
+  "language": { "switch": "中文", "label": "Switch to Chinese" },
+  "connection": { "reconnecting": "Reconnecting…" },
+  "column": { "todo": "To do", "doing": "In progress", "done": "Done" },
+  "board": {
+    "add": "Add task",
+    "addPlaceholder": "What needs doing?",
+    "create": "Create task",
+    "cancel": "Cancel",
+    "emptyColumn": "Drag a task here to start",
+    "saveFailed": "Could not save: {{message}}. The board was reloaded."
+  },
+  "card": {
+    "noAgent": "No agent assigned",
+    "moveToDone": "Move to Done",
+    "reply": "Reply to {{agent}}",
+    "ended_one": "{{count}} session ended",
+    "ended_other": "{{count}} sessions ended",
+    "edit": "Edit {{title}}"
+  },
+  "editor": {
+    "heading": "Edit task",
+    "title": "Title",
+    "note": "Note",
+    "project": "Project",
+    "sessions": "Agent sessions",
+    "noSessions": "No live sessions right now. Start an agent and it shows up here.",
+    "save": "Save task",
+    "delete": "Delete task",
+    "cancel": "Cancel"
+  },
+  "state": {
+    "thinking": "Thinking",
+    "running": "Running",
+    "writing": "Writing reply",
+    "waiting": "Needs you",
+    "done": "Done",
+    "interrupted": "Interrupted",
+    "error": "Error",
+    "idle": "Idle"
+  },
+  "list": {
+    "needsYou": "Needs you",
+    "working": "Working",
+    "resting": "Resting",
+    "intern": "intern",
+    "empty": "No active sessions. Start Claude Code or Codex in any project and it shows up here."
+  }
+}
