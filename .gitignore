@@ -1,0 +1,43 @@
+# Brainstorm preview server (session key and draft mockups)
+.superpowers/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+*.pem
+*.key
+
+# Local data (tasks, session snapshots)
+.unpaidinterns/
+tasks.json
+tasks.json.bak
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+.vite/
+.turbo/
+*.tsbuildinfo
+
+# Cloudflare
+.wrangler/
+
+# Test output
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS and editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
