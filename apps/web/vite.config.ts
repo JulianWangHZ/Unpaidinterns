@@ -3,6 +3,8 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [react()],
+  // The 3D island chunk is large but lazy-loaded, so the board never downloads it.
+  build: { chunkSizeWarningLimit: 1100 },
   server: {
     proxy: {
       '/api': 'http://127.0.0.1:4777',

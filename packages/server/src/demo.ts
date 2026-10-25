@@ -25,7 +25,7 @@ export const DEMO_SESSION_COUNT = DEMO_SESSIONS.length;
 
 export function startDemo(
   hub: SessionHub,
-  { intervalMs = 2000, now = Date.now }: { intervalMs?: number; now?: () => number } = {},
+  { intervalMs = 5000, now = Date.now }: { intervalMs?: number; now?: () => number } = {},
 ): () => void {
   let tick = 0;
   const emit = () => {

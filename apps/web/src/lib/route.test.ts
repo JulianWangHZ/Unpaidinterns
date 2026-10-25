@@ -5,8 +5,8 @@ describe('parseRoute', () => {
   it.each([
     ['#/island', 'island'],
     ['#/board', 'board'],
-    ['', 'board'],
-    ['#/unknown', 'board'],
+    ['', 'island'],
+    ['#/unknown', 'island'],
   ] as const)('%s -> %s', (hash, route) => {
     expect(parseRoute(hash)).toBe(route);
   });

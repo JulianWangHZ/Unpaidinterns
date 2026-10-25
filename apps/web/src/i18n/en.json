@@ -1,9 +1,26 @@
 {
-  "nav": { "island": "Island", "board": "Board", "label": "View" },
-  "filter": { "allProjects": "All projects", "search": "Search tasks", "agents": "Show agents" },
-  "language": { "switch": "中文", "label": "Switch to Chinese" },
-  "connection": { "reconnecting": "Reconnecting…" },
-  "column": { "todo": "To do", "doing": "In progress", "done": "Done" },
+  "nav": {
+    "island": "Island",
+    "board": "Board",
+    "label": "View"
+  },
+  "filter": {
+    "allProjects": "All projects",
+    "search": "Search tasks",
+    "agents": "Show agents"
+  },
+  "language": {
+    "switch": "中文",
+    "label": "Switch to Chinese"
+  },
+  "connection": {
+    "reconnecting": "Reconnecting…"
+  },
+  "column": {
+    "todo": "To do",
+    "doing": "In progress",
+    "done": "Done"
+  },
   "board": {
     "add": "Add task",
     "addPlaceholder": "What needs doing?",
@@ -47,5 +64,23 @@
     "resting": "Resting",
     "intern": "intern",
     "empty": "No active sessions. Start Claude Code or Codex in any project and it shows up here."
+  },
+  "island": {
+    "overview": "Overview",
+    "loading": "Building the island…",
+    "noWebgl": "3D needs WebGL, which this browser has turned off. Showing the list instead.",
+    "focus": "Zoom into {{project}}",
+    "agents": "Agents",
+    "empty": "The island is quiet. Start Claude Code or Codex in any project and a desk appears here."
+  },
+  "amenity": {
+    "coffee": "Coffee bar",
+    "kitchen": "Kitchen",
+    "ktv": "KTV",
+    "gym": "Gym",
+    "massage": "Massage room",
+    "ballpit": "Ball pit",
+    "pingpong": "Ping-pong",
+    "nap": "Nap pods"
   }
 }

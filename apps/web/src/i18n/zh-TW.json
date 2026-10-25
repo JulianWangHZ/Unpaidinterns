@@ -1,9 +1,26 @@
 {
-  "nav": { "island": "島", "board": "看板", "label": "檢視" },
-  "filter": { "allProjects": "所有專案", "search": "搜尋任務", "agents": "顯示 agent" },
-  "language": { "switch": "EN", "label": "切換成英文" },
-  "connection": { "reconnecting": "重新連線中…" },
-  "column": { "todo": "待辦", "doing": "進行中", "done": "完成" },
+  "nav": {
+    "island": "島",
+    "board": "看板",
+    "label": "檢視"
+  },
+  "filter": {
+    "allProjects": "所有專案",
+    "search": "搜尋任務",
+    "agents": "顯示 agent"
+  },
+  "language": {
+    "switch": "EN",
+    "label": "切換成英文"
+  },
+  "connection": {
+    "reconnecting": "重新連線中…"
+  },
+  "column": {
+    "todo": "待辦",
+    "doing": "進行中",
+    "done": "完成"
+  },
   "board": {
     "add": "新增任務",
     "addPlaceholder": "要做什麼？",
@@ -47,5 +64,23 @@
     "resting": "休息中",
     "intern": "實習生",
     "empty": "目前沒有進行中的 session。在任何專案啟動 Claude Code 或 Codex 就會出現在這裡。"
+  },
+  "island": {
+    "overview": "全景",
+    "loading": "正在搭建小島…",
+    "noWebgl": "3D 需要 WebGL，但這個瀏覽器把它關掉了，先改用清單顯示。",
+    "focus": "放大 {{project}}",
+    "agents": "Agent",
+    "empty": "島上很安靜。在任何專案啟動 Claude Code 或 Codex，這裡就會多一張桌子。"
+  },
+  "amenity": {
+    "coffee": "咖啡吧台",
+    "kitchen": "廚房",
+    "ktv": "KTV",
+    "gym": "健身房",
+    "massage": "按摩室",
+    "ballpit": "球池",
+    "pingpong": "桌球",
+    "nap": "睡眠艙"
   }
 }

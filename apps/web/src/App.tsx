@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Board } from './components/Board.js';
 import { Header } from './components/Header.js';
-import { SessionList } from './components/SessionList.js';
 import { TaskEditor } from './components/TaskEditor.js';
 import { projectsOf } from './lib/filters.js';
 import { parseRoute, type Route } from './lib/route.js';
 import { connectSessions } from './lib/socket.js';
 import { useSessionStore } from './store.js';
+
+// The 3D bundle only loads when the island is opened.
+const IslandView = lazy(() => import('./components/island/IslandView.js'));
 
 function useRoute(): Route {
   const [route, setRoute] = useState(() => parseRoute(window.location.hash));
@@ -19,6 +22,7 @@ function useRoute(): Route {
 }
 
 export function App() {
+  const { t } = useTranslation();
   const route = useRoute();
   const tasks = useSessionStore((state) => state.tasks);
   const sessions = useSessionStore((state) => state.sessions);
@@ -34,7 +38,15 @@ export function App() {
   return (
     <div className="app">
       <Header route={route} projects={projects} />
-      <main className="page">{route === 'board' ? <Board onEdit={setEditing} /> : <SessionList />}</main>
+      <main className="page">
+        {route === 'board' ? (
+          <Board onEdit={setEditing} />
+        ) : (
+          <Suspense fallback={<p className="empty">{t('island.loading')}</p>}>
+            <IslandView />
+          </Suspense>
+        )}
+      </main>
       {editing ? <TaskEditor taskId={editing} projects={projects} onClose={() => setEditing(null)} /> : null}
     </div>
   );
