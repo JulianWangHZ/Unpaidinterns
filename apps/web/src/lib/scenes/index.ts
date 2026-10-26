@@ -30,7 +30,11 @@ export function spotAtActivity(scene: SceneDefinition, activity: Activity, seat:
   const fixed = scene.activitySeats?.[activity];
   const own = fixed?.[seat];
   if (own) {
-    return { position: [centre[0] + own.position[0], centre[1] + own.position[1], centre[2] + own.position[2]], facing: own.facing };
+    return {
+      position: [centre[0] + own.position[0], centre[1] + own.position[1], centre[2] + own.position[2]],
+      facing: own.facing,
+      ...(own.seated ? { seated: true } : {}),
+    };
   }
   return activitySeat(centre, seat - (fixed?.length ?? 0), (scene.activityRadius?.[activity] ?? 0.7) + (fixed ? 0.5 : 0));
 }

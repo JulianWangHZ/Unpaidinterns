@@ -5,7 +5,7 @@ import type { Group } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import type { Pose } from '../../lib/island/behavior.js';
 import { clipFor } from '../../lib/scenes/manifest.js';
-import type { Motion } from './Figure.js';
+import type { Motion } from './characters/motion.js';
 
 interface ModelCharacterProps {
   url: string;

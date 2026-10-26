@@ -760,8 +760,20 @@ textarea {
 }
 
 .nt-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding-left: 3px !important;
   color: #ffffff;
   font-weight: 600;
+}
+
+.nt-icon {
+  width: 15px;
+  height: 15px;
+  padding: 2px;
+  border-radius: 50%;
+  background: #ffffff;
 }
 
 .nt-state {

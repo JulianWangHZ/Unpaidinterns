@@ -1,16 +1,19 @@
 import type { Session } from '@unpaidinterns/core';
-import { projectLabel } from '../../lib/labels.js';
+import { AGENT_ICONS } from '../../lib/agent-icons.js';
+import { projectLabel, tagLabel } from '../../lib/labels.js';
 import { stateGroup } from '@unpaidinterns/core';
 import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { Suspense, useRef, type RefObject } from 'react';
+import { Suspense, useMemo, useRef, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Vector3, type Group } from 'three';
 import { AGENT_NAMES } from '../../lib/agents.js';
 import type { Pose } from '../../lib/island/behavior.js';
 import type { Outfit, Spot } from '../../lib/scenes/types.js';
-import { AgentBadge } from './Outfit.js';
-import { Figure, type Motion } from './Figure.js';
+import { lookFor } from '../../lib/characters/look.js';
+import { AgentBadge } from './characters/AgentBadge.js';
+import { Mini } from './characters/Mini.js';
+import type { Motion } from './characters/motion.js';
 import { useIslandStore } from './island-store.js';
 import { ModelCharacter } from './ModelCharacter.js';
 
@@ -18,6 +21,8 @@ export const AGENT_COLORS = { claude: '#e07a5f', codex: '#10a37f', gemini: '#428
 
 // Units per second, scaled with the character so big indoor scenes do not take forever to cross.
 const WALK_SPEED = 2.4;
+/** Desk poses done sitting in the office chair. Waving stands up. */
+const DESK_SEATED: ReadonlySet<Pose> = new Set(['think', 'type', 'typeSlow', 'slump']);
 const ARRIVED = 0.02;
 
 interface CharacterProps {
@@ -46,7 +51,9 @@ export function Character({ session, spot, pose, outfit, model, nameTag, scale, 
   const intern = Boolean(session.parentSessionId);
   const alert = ['needsYou', 'trouble'].includes(stateGroup(session.state));
   const brand = AGENT_COLORS[session.agent];
-  const height = (outfit.headwear === 'mascot' ? 1.05 : 0.95) * scale;
+  const look = useMemo(() => lookFor(session.sessionId), [session.sessionId]);
+  const seated = spot.seated ?? DESK_SEATED.has(pose);
+  const height = ((outfit.headwear === 'mascot' ? 1.12 : 1.0) - (seated ? 0.06 : 0)) * scale;
 
   useFrame((_, delta) => {
     const node = group.current;
@@ -66,15 +73,17 @@ export function Character({ session, spot, pose, outfit, model, nameTag, scale, 
   });
 
   const figure = (
-    <Figure
-      color={outfit.body ?? brand}
+    <Mini
+      look={look}
+      shirt={outfit.body ?? brand}
+      pose={pose}
+      seated={seated}
       headwear={outfit.headwear}
       headwearColor={outfit.headwearColor}
       extra={outfit.extra}
-      pose={pose}
       motion={motion}
       still={reducedMotion}
-      onChair={scale > 1}
+      opacity={intern ? 0.85 : 1}
     />
   );
 
@@ -112,8 +121,9 @@ export function Character({ session, spot, pose, outfit, model, nameTag, scale, 
         {nameTag ? (
           <div className="nametag" data-alert={alert || undefined} data-selected={hovered || selected || undefined}>
             <span className="nt-name" style={{ background: brand }}>
-              {AGENT_NAMES[session.agent]}
-              {intern ? ` · ${t('list.intern')}` : ''} · {projectLabel(session)}
+              <img className="nt-icon" src={AGENT_ICONS[session.agent]} alt={AGENT_NAMES[session.agent]} />
+              {tagLabel(session)}
+              {intern ? ` · ${t('list.intern')}` : ''}
             </span>
             <span className="nt-state">{t(`state.${session.state}`)}</span>
             {hovered || selected ? <span className="nt-tool">{session.tool ?? ''}</span> : null}

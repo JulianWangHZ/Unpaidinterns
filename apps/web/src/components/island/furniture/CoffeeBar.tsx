@@ -1,7 +1,9 @@
 import { RoundedBox } from '@react-three/drei';
 import { useMemo } from 'react';
-import { Figure } from '../Figure.js';
+import { Mini } from '../characters/Mini.js';
 import { brushedMetal, chalkMenu, woodGrain } from './surfaces.js';
+
+const BARISTA = { gender: 'female', skirt: false, skin: '#efc29b', hair: 'bun', hairColor: '#4a2f22', pants: '#1f2430', shoes: '#1b1b22', glasses: false } as const;
 
 function Steel({ tint = '#d9dde2' }: { tint?: string }) {
   const metal = useMemo(() => brushedMetal(), []);
@@ -183,7 +185,9 @@ export function CoffeeBar() {
           <BarStool />
         </group>
       ))}
-      <Figure color="#8a5f38" extra="apron" position={[0.05, 0, -0.32]} facing={0} pose="sip" seated={false} />
+      <group position={[0.05, 0, -0.32]}>
+        <Mini look={BARISTA} shirt="#3d2a20" extra="apron" pose="sip" seated={false} />
+      </group>
     </group>
   );
 }

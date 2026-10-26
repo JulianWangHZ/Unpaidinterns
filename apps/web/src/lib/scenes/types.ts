@@ -11,6 +11,8 @@ export interface Spot {
   position: Vec3;
   /** Rotation around Y. Characters face +Z at rotation 0. */
   facing: number;
+  /** The character sits here (chair, stool, sofa) rather than standing. */
+  seated?: boolean;
 }
 
 export type Headwear = 'none' | 'cap' | 'swimcap' | 'mascot';

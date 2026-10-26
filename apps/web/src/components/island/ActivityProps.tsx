@@ -1,12 +1,15 @@
 import { RoundedBox } from '@react-three/drei';
 import type { ReactNode } from 'react';
 import type { Activity, SceneId, Vec3 } from '../../lib/scenes/types.js';
-import { Figure } from './Figure.js';
+import { Mini } from './characters/Mini.js';
 import { BallPit } from './furniture/BallPit.js';
 import { CoffeeBar as Cafe } from './furniture/CoffeeBar.js';
 import { PoolTable } from './furniture/PoolTable.js';
 
 type V3 = Vec3;
+
+/** The outdoor scenes' coffee cart vendor. */
+const OUTDOOR_BARISTA = { gender: 'male', skirt: false, skin: '#d9a47a', hair: 'short', hairColor: '#2b1d16', pants: '#2f3a5a', shoes: '#1b1b22', glasses: false } as const;
 
 function Box({ size, at, color, round }: { size: V3; at: V3; color: string; round?: boolean }) {
   return (
@@ -24,7 +27,9 @@ function CoffeeBar() {
       <Box size={[0.46, 0.04, 0]} at={[0, 0.44, 0]} color="#d4a982" round />
       <Box size={[0.12, 0.16, 0.1]} at={[0.12, 0.54, -0.1]} color="#5b5f97" />
       {/* The barista NPC always works the bar, so it never looks empty. */}
-      <Figure color="#8a5f38" extra="apron" position={[0, 0, -0.05]} facing={0} pose="sip" seated={false} />
+      <group position={[0, 0, -0.05]}>
+        <Mini look={OUTDOOR_BARISTA} shirt="#8a5f38" extra="apron" pose="sip" seated={false} />
+      </group>
     </>
   );
 }

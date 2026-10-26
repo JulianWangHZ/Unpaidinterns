@@ -67,9 +67,10 @@ export const office: SceneDefinition = {
   // Three cushions on the rec-room sofa, everyone facing the room.
   // Offsets are in world units; office props are drawn at 1.35x, so these match the scaled furniture.
   activitySeats: {
-    sofa: [-0.68, 0, 0.68].map((dx) => ({ position: [dx, 0.36, -0.1] as [number, number, number], facing: 0 })),
+    // Raised so the legs rest on top of the cushion instead of sinking into it.
+    sofa: [-0.68, 0, 0.68].map((dx) => ({ position: [dx, 0.29, 0.02] as [number, number, number], facing: 0, seated: true })),
     // On the two bar stools, facing the counter.
-    coffee: [-0.43, 0.43].map((dx) => ({ position: [dx, 0.72, 0.5] as [number, number, number], facing: Math.PI })),
+    coffee: [-0.43, 0.43].map((dx) => ({ position: [dx, 0.5, 0.5] as [number, number, number], facing: Math.PI, seated: true })),
     // Inside the pit, waist-deep in balls.
     ballpit: [
       { position: [-0.3, 0.1, -0.25] as [number, number, number], facing: 0.4 },

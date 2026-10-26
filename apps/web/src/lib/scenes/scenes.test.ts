@@ -149,7 +149,8 @@ describe('office seats on furniture', () => {
     const { spotAtActivity } = await import('./index.js');
     const stools = [0, 1].map((i) => spotAtActivity(office, 'coffee', i));
     for (const stool of stools) {
-      expect(stool.position[1] - office.activities.coffee[1]).toBeGreaterThan(0.5);
+      expect(stool.position[1] - office.activities.coffee[1]).toBeGreaterThan(0.3);
+      expect(stool.seated).toBe(true);
       expect(stool.facing).toBeCloseTo(Math.PI);
     }
   });
