@@ -1,41 +1,42 @@
 import { expect, test } from '@playwright/test';
 
-test('renders the office scene with a synced agent list', async ({ page }) => {
+const chats = (page: import('@playwright/test').Page) => page.getByRole('complementary', { name: 'Chats' });
+
+test('renders the office with a chat list of every agent', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('.island-stage canvas')).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'Office' })).toHaveAttribute('aria-selected', 'true');
-  await expect(page.getByRole('complementary', { name: 'Agents' }).getByRole('button')).toHaveCount(5);
+  await expect(page.getByRole('link', { name: 'Office' })).toHaveAttribute('aria-current', 'page');
+  await expect(chats(page).locator('.contact')).toHaveCount(5);
 });
 
-test('tags every office agent and highlights the one that needs the user', async ({ page }) => {
+test('tags every office agent with its product icon and highlights the one that needs the user', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('.nametag')).toHaveCount(5);
+  await expect(page.locator('.nametag .nt-icon')).toHaveCount(5);
   await expect(page.locator('.nametag[data-alert]')).toContainText('Needs you');
+  await expect(page.locator('.nt-name', { hasText: 'fix-auth' })).toBeVisible();
 });
 
-test('shows a bubble only over the agent that needs the user outdoors', async ({ page }) => {
+test('switches scenes and hides agents from the settings menu', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('tab', { name: 'Amusement park' }).click();
-  await expect(page.locator('.bubble[data-alert]:not([hidden])')).toContainText('Needs you');
-  await page.getByRole('tab', { name: 'Office' }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('radio', { name: 'Pool' }).click();
+  await expect(page.getByRole('radio', { name: 'Pool' })).toHaveAttribute('aria-checked', 'true');
+  await page.getByRole('switch', { name: 'Codex' }).click();
+  await expect(chats(page).locator('.contact')).toHaveCount(4);
+  await page.getByRole('switch', { name: 'Codex' }).click();
+  await page.getByRole('radio', { name: 'Office' }).click();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Settings' })).toBeHidden();
 });
 
-test('switches scenes and remembers the choice', async ({ page }) => {
+test('opens a conversation from the list and goes back', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('tab', { name: 'Pool' }).click();
-  await expect(page.getByRole('tab', { name: 'Pool' })).toHaveAttribute('aria-selected', 'true');
-  await page.reload();
-  await expect(page.getByRole('tab', { name: 'Pool' })).toHaveAttribute('aria-selected', 'true');
-  await page.getByRole('tab', { name: 'Office' }).click();
-});
-
-test('follows an agent picked from the side list and returns to the overview', async ({ page }) => {
-  await page.goto('/');
-  const row = page.getByRole('complementary', { name: 'Agents' }).getByRole('button', { name: /Gemini/ });
-  await row.click();
-  await expect(row).toHaveAttribute('aria-pressed', 'true');
-  await page.getByRole('button', { name: 'Overview' }).click();
-  await expect(row).toHaveAttribute('aria-pressed', 'false');
+  await chats(page).locator('.contact', { hasText: 'docs-site' }).click();
+  await expect(chats(page).locator('.conv-title')).toContainText('docs-site');
+  await expect(chats(page).getByRole('textbox')).toBeVisible();
+  await chats(page).getByRole('button', { name: 'Back to all chats' }).click();
+  await expect(chats(page).locator('.contact')).toHaveCount(5);
 });
 
 test('serves an empty model manifest for every scene', async ({ request }) => {

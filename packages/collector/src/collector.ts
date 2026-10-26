@@ -18,7 +18,8 @@ export interface ParseIssue {
 
 export interface CollectorOptions {
   sources: SourceConfig[];
-  onEvent(event: AgentEvent): void;
+  /** Called for every parsed event, with the session file it came from. */
+  onEvent(event: AgentEvent, source: { filePath: string }): void;
   onParseError?(issue: ParseIssue): void;
   maxFileAgeMs: number;
   usePolling?: boolean;
@@ -57,7 +58,7 @@ export function startCollector(options: CollectorOptions): Collector {
     const parse = parserFor(source, filePath);
     for (const line of lines) {
       const result = parse(line);
-      if (result.kind === 'event') options.onEvent({ ...result.event, ...resolveProject(result.event.cwd) });
+      if (result.kind === 'event') options.onEvent({ ...result.event, ...resolveProject(result.event.cwd) }, { filePath });
       else if (result.kind === 'error') options.onParseError?.({ filePath, reason: result.reason });
     }
   }

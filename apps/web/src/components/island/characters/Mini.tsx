@@ -111,10 +111,17 @@ function animate(rig: Rig, pose: Pose, t: number, seated: boolean, walking: bool
       rig.armL.rotation.x = Math.sin(t * 10) * 0.9;
       rig.armR.rotation.x = -Math.sin(t * 10) * 0.9;
       break;
-    case 'nap':
-      rig.root.rotation.z = Math.PI / 2;
-      rig.root.position.y = 0.22;
+    case 'nap': {
+      // Sitting and nodding off: head drops forward, jerks up a little, drops again.
+      const nod = Math.max(0, Math.sin(t * 0.7));
+      rig.body.rotation.x = 0.12;
+      rig.head.rotation.x = 0.5 - nod * nod * 0.35;
+      rig.armL.rotation.x = -0.6;
+      rig.armR.rotation.x = -0.6;
+      rig.armL.rotation.z = -0.15;
+      rig.armR.rotation.z = 0.15;
       break;
+    }
   }
 }
 

@@ -1,17 +1,8 @@
 {
   "nav": {
-    "island": "Island",
+    "island": "Office",
     "board": "Board",
     "label": "View"
-  },
-  "filter": {
-    "allProjects": "All projects",
-    "search": "Search tasks",
-    "agents": "Show agents"
-  },
-  "language": {
-    "switch": "中文",
-    "label": "Switch to Chinese"
   },
   "connection": {
     "reconnecting": "Reconnecting…"
@@ -35,7 +26,11 @@
     "reply": "Reply to {{agent}}",
     "ended_one": "{{count}} session ended",
     "ended_other": "{{count}} sessions ended",
-    "edit": "Edit {{title}}"
+    "edit": "Edit {{title}}",
+    "doing": "Doing",
+    "lastReply": "Last reply",
+    "started": "Session {{time}}",
+    "updated": "Updated {{time}} ago"
   },
   "editor": {
     "heading": "Edit task",
@@ -98,6 +93,50 @@
       "needsYou": "Needs you",
       "doneToday": "Done today",
       "nothing": "Nothing in progress"
+    }
+  },
+  "settings": {
+    "open": "Settings",
+    "title": "Settings",
+    "agents": "Show agents",
+    "language": "Language",
+    "pipOpen": "Open in picture-in-picture",
+    "pipClose": "Close picture-in-picture",
+    "pipActive": "Showing in the picture-in-picture window.",
+    "pipUnsupported": "Needs Chrome or Edge 116 or newer."
+  },
+  "chat": {
+    "title": "Chats",
+    "loading": "Loading conversation…",
+    "noMessages": "No messages yet.",
+    "placeholder": "Message {{agent}}",
+    "send": "Send to {{agent}}",
+    "back": "Back to all chats",
+    "typing": "Working",
+    "more": "Show all",
+    "less": "Show less",
+    "tools_one": "{{count}} tool call",
+    "tools_other": "{{count}} tool calls",
+    "permission": "Allow",
+    "mode": "Send as",
+    "permissions": {
+      "readOnly": "Read only",
+      "edit": "Edit files",
+      "full": "Edit and run commands"
+    },
+    "modes": {
+      "resume": "Same session",
+      "fork": "New branch"
+    },
+    "fullTitle": "Let it run commands?",
+    "fullBody": "{{agent}} will be able to run shell commands in this project without asking.",
+    "fullConfirm": "Allow commands",
+    "runFailed": "The message did not finish: {{error}}",
+    "blocked": {
+      "working": "{{agent}} is working. You can send once it finishes.",
+      "sending": "Sending to {{agent}}…",
+      "terminal": "{{agent}} is waiting for your answer in its terminal. Reply there.",
+      "unsupported": "Messaging {{agent}} is not supported yet."
     }
   }
 }

@@ -11,6 +11,7 @@ import { AGENT_NAMES } from '../../lib/agents.js';
 import type { Pose } from '../../lib/island/behavior.js';
 import type { Outfit, Spot } from '../../lib/scenes/types.js';
 import { lookFor } from '../../lib/characters/look.js';
+import { AgentCard } from './AgentCard.js';
 import { AgentBadge } from './characters/AgentBadge.js';
 import { Mini } from './characters/Mini.js';
 import type { Motion } from './characters/motion.js';
@@ -21,8 +22,8 @@ export const AGENT_COLORS = { claude: '#e07a5f', codex: '#10a37f', gemini: '#428
 
 // Units per second, scaled with the character so big indoor scenes do not take forever to cross.
 const WALK_SPEED = 2.4;
-/** Desk poses done sitting in the office chair. Waving stands up. */
-const DESK_SEATED: ReadonlySet<Pose> = new Set(['think', 'type', 'typeSlow', 'slump']);
+/** Poses done sitting: desk work in the office chair, and dozing. Waving stands up. */
+const DESK_SEATED: ReadonlySet<Pose> = new Set(['think', 'type', 'typeSlow', 'slump', 'nap']);
 const ARRIVED = 0.02;
 
 interface CharacterProps {
@@ -118,6 +119,7 @@ export function Character({ session, spot, pose, outfit, model, nameTag, scale, 
         zIndexRange={[40, 21]}
         style={{ pointerEvents: 'none' }}
       >
+        {hovered ? <AgentCard session={session} /> : null}
         {nameTag ? (
           <div className="nametag" data-alert={alert || undefined} data-selected={hovered || selected || undefined}>
             <span className="nt-name" style={{ background: brand }}>
@@ -126,7 +128,6 @@ export function Character({ session, spot, pose, outfit, model, nameTag, scale, 
               {intern ? ` · ${t('list.intern')}` : ''}
             </span>
             <span className="nt-state">{t(`state.${session.state}`)}</span>
-            {hovered || selected ? <span className="nt-tool">{session.tool ?? ''}</span> : null}
           </div>
         ) : (
           <div className="bubble" data-alert={alert || undefined} hidden={!(alert || hovered || selected)}>

@@ -57,10 +57,12 @@ test('deletes a task from the editor', async ({ page }) => {
 
 test('switches language and remembers it', async ({ page }) => {
   await page.goto('/#/board');
-  await page.getByRole('button', { name: 'Switch to Chinese' }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('radio', { name: '中文' }).click();
   await expect(page.getByRole('heading', { name: /待辦/ })).toBeVisible();
   await page.reload();
   await expect(page.getByRole('heading', { name: /待辦/ })).toBeVisible();
-  await page.getByRole('button', { name: '切換成英文' }).click();
+  await page.getByRole('button', { name: '設定' }).click();
+  await page.getByRole('radio', { name: 'English' }).click();
   await expect(page.getByRole('heading', { name: /To do/ })).toBeVisible();
 });

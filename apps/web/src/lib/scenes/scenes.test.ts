@@ -167,3 +167,13 @@ describe('office seats on furniture', () => {
     }
   });
 });
+
+describe('office nap chairs', () => {
+  it('seats dozing agents in the two armchairs, facing the room', async () => {
+    const { office } = await import('./office.js');
+    const { spotAtActivity } = await import('./index.js');
+    const chairs = [0, 1].map((i) => spotAtActivity(office, 'nap', i));
+    expect(chairs.every((c) => c.seated === true && c.facing === 0 && c.position[1] > 0)).toBe(true);
+    expect(chairs[0]?.position[0]).not.toBe(chairs[1]?.position[0]);
+  });
+});

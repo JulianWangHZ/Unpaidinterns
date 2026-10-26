@@ -71,6 +71,8 @@ export const office: SceneDefinition = {
     sofa: [-0.68, 0, 0.68].map((dx) => ({ position: [dx, 0.29, 0.02] as [number, number, number], facing: 0, seated: true })),
     // On the two bar stools, facing the counter.
     coffee: [-0.43, 0.43].map((dx) => ({ position: [dx, 0.5, 0.5] as [number, number, number], facing: Math.PI, seated: true })),
+    // Dozing in the two lounge armchairs.
+    nap: [-0.61, 0.61].map((dx) => ({ position: [dx, 0.29, -0.05] as [number, number, number], facing: 0, seated: true })),
     // Inside the pit, waist-deep in balls.
     ballpit: [
       { position: [-0.3, 0.1, -0.25] as [number, number, number], facing: 0.4 },
@@ -89,7 +91,7 @@ export const office: SceneDefinition = {
   lighting: 'night',
   characterScale: 1.3,
   nameTags: true,
-  cameraTarget: [0, 5.3, 0],
-  cameraOffset: [0, 0.6, 31],
+  cameraTarget: [0, 5.6, 0],
+  cameraOffset: [0, 3.2, 47],
   closeOffset: [0, 1.6, 7.5],
 };

@@ -6,10 +6,12 @@ import { api } from '../lib/api.js';
 import { useSessionStore } from '../store.js';
 import { AgentAvatar } from './AgentAvatar.js';
 
-export function TaskEditor({ taskId, projects, onClose }: { taskId: string; projects: string[]; onClose(): void }) {
+export function TaskEditor({ taskId, onClose }: { taskId: string; onClose(): void }) {
   const { t } = useTranslation();
   const task = useSessionStore((state) => state.tasks.find((candidate) => candidate.id === taskId));
   const sessions = useSessionStore((state) => state.sessions);
+  const tasks = useSessionStore((state) => state.tasks);
+  const projects = [...new Set([...tasks.map((t) => t.project), ...Object.values(sessions).map((s) => s.project)].filter(Boolean))].sort();
   const dialog = useRef<HTMLDialogElement>(null);
   const [title, setTitle] = useState(task?.title ?? '');
   const [note, setNote] = useState(task?.note ?? '');

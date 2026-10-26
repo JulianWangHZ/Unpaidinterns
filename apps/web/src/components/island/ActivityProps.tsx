@@ -2,6 +2,7 @@ import { RoundedBox } from '@react-three/drei';
 import type { ReactNode } from 'react';
 import type { Activity, SceneId, Vec3 } from '../../lib/scenes/types.js';
 import { Mini } from './characters/Mini.js';
+import { DozeCorner } from './furniture/Armchair.js';
 import { BallPit } from './furniture/BallPit.js';
 import { CoffeeBar as Cafe } from './furniture/CoffeeBar.js';
 import { PoolTable } from './furniture/PoolTable.js';
@@ -266,7 +267,7 @@ const OFFICE: Record<Activity, Props> = {
 };
 
 const BY_SCENE: Record<SceneId, Record<Activity, Props>> = {
-  office: { ...OFFICE, coffee: Cafe, pingpong: PoolTable, gym: () => null },
+  office: { ...OFFICE, coffee: Cafe, pingpong: PoolTable, gym: () => null, nap: DozeCorner },
   park: {
     ...OFFICE,
     kitchen: () => <FoodStand roof="#ff8fab" />,

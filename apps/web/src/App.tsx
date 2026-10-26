@@ -1,15 +1,20 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Board } from './components/Board.js';
 import { Header } from './components/Header.js';
+import { PipContext } from './components/settings/pip-context.js';
 import { TaskEditor } from './components/TaskEditor.js';
-import { projectsOf } from './lib/filters.js';
+import { openPipWindow, pipSupported } from './lib/pip.js';
 import { parseRoute, type Route } from './lib/route.js';
+import { loadHiddenAgents, useSettingsStore } from './lib/settings.js';
 import { connectSessions } from './lib/socket.js';
 import { useSessionStore } from './store.js';
 
-// The 3D bundle only loads when the island is opened.
+// The 3D bundle only loads when the office is opened.
 const IslandView = lazy(() => import('./components/island/IslandView.js'));
+
+const PIP_SIZE = { width: 720, height: 480 };
 
 function useRoute(): Route {
   const [route, setRoute] = useState(() => parseRoute(window.location.hash));
@@ -21,33 +26,64 @@ function useRoute(): Route {
   return route;
 }
 
+/** The current view renders into a picture-in-picture window while one is open, and back into the page after. */
+function usePictureInPicture() {
+  const [pip, setPip] = useState<Window | null>(null);
+  const toggle = useCallback(async () => {
+    if (pip) {
+      pip.close();
+      return;
+    }
+    const opened = await openPipWindow(PIP_SIZE.width, PIP_SIZE.height);
+    opened.addEventListener('pagehide', () => setPip(null), { once: true });
+    setPip(opened);
+  }, [pip]);
+  return { pip, toggle, available: pipSupported() };
+}
+
 export function App() {
   const { t } = useTranslation();
   const route = useRoute();
-  const tasks = useSessionStore((state) => state.tasks);
-  const sessions = useSessionStore((state) => state.sessions);
   const [editing, setEditing] = useState<string | null>(null);
-  const projects = useMemo(() => projectsOf(tasks, sessions), [tasks, sessions]);
+  const { pip, toggle, available } = usePictureInPicture();
 
   useEffect(() => {
+    useSettingsStore.getState().setHiddenAgents(loadHiddenAgents(localStorage));
     const { apply, setStatus } = useSessionStore.getState();
     const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
     return connectSessions({ url: `${scheme}://${window.location.host}/ws`, onMessage: apply, onStatus: setStatus });
   }, []);
 
+  const view =
+    route === 'board' ? (
+      <Board route={route} onEdit={setEditing} />
+    ) : (
+      <Suspense fallback={<p className="empty">{t('island.loading')}</p>}>
+        <IslandView route={route} />
+      </Suspense>
+    );
+
+  const pipControls = { available, open: pip !== null, toggle: () => void toggle() };
+
   return (
+    <PipContext.Provider value={pipControls}>
     <div className="app">
-      <Header route={route} projects={projects} />
+      <Header />
       <main className="page">
-        {route === 'board' ? (
-          <Board onEdit={setEditing} />
+        {pip ? (
+          <div className="pip-placeholder">
+            <p>{t('settings.pipActive')}</p>
+            <button type="button" className="btn" onClick={() => pip.close()}>
+              {t('settings.pipClose')}
+            </button>
+          </div>
         ) : (
-          <Suspense fallback={<p className="empty">{t('island.loading')}</p>}>
-            <IslandView />
-          </Suspense>
+          view
         )}
       </main>
-      {editing ? <TaskEditor taskId={editing} projects={projects} onClose={() => setEditing(null)} /> : null}
+      {pip ? createPortal(<div className="page pip-page">{view}</div>, pip.document.body) : null}
+      {editing ? <TaskEditor taskId={editing} onClose={() => setEditing(null)} /> : null}
     </div>
+    </PipContext.Provider>
   );
 }

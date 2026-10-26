@@ -6,17 +6,19 @@ import { createLinkAuth, tokensMatch } from './auth.js';
 import type { SessionHub } from './session-hub.js';
 import type { TaskRepository } from './task-repository.js';
 import { taskRoutes } from './task-routes.js';
+import { chatRoutes, type ChatDeps } from './chat-routes.js';
 
 export const AUTH_COOKIE = 'ui_session';
 
 export interface AppOptions {
   hub: SessionHub;
   tasks?: TaskRepository;
+  chat?: ChatDeps;
   linkToken: string;
   sessionSecret: string;
 }
 
-export function createApp({ hub, tasks, linkToken, sessionSecret }: AppOptions) {
+export function createApp({ hub, tasks, chat, linkToken, sessionSecret }: AppOptions) {
   const app = new Hono();
   const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
   const linkAuth = createLinkAuth(linkToken);
@@ -27,6 +29,15 @@ export function createApp({ hub, tasks, linkToken, sessionSecret }: AppOptions) 
     }
     await next();
   };
+
+  // Writes must come from this page: a cross-site form or fetch carries another Origin.
+  app.use('/api/*', async (c, next) => {
+    if (c.req.method !== 'GET' && c.req.method !== 'HEAD') {
+      const origin = c.req.header('origin');
+      if (origin && origin !== new URL(c.req.url).origin) return c.json({ error: 'Requests from other sites are not allowed.' }, 403);
+    }
+    await next();
+  });
 
   app.get('/api/health', (c) => c.json({ ok: true }));
 
@@ -43,6 +54,7 @@ export function createApp({ hub, tasks, linkToken, sessionSecret }: AppOptions) 
 
   app.get('/api/sessions', requireSession, (c) => c.json({ sessions: hub.sessions() }));
   if (tasks) app.route('/api/tasks', taskRoutes(tasks, requireSession, (message) => hub.broadcast(message)));
+  if (chat) app.route('/api/sessions', chatRoutes(hub, chat, requireSession));
 
   app.get(
     '/ws',

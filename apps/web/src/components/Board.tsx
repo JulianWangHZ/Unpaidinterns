@@ -13,11 +13,13 @@ import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api.js';
-import { filterTasks, useFilterStore } from '../lib/filters.js';
+import type { Route } from '../lib/route.js';
+import { tasksForAgents, useSettingsStore } from '../lib/settings.js';
 import { columnsOf, idsOf, moveId, placeTask, type ColumnIds } from '../lib/order.js';
 import { useSessionStore } from '../store.js';
 import { AddTask } from './AddTask.js';
 import { Column } from './Column.js';
+import { ViewBar } from './ViewBar.js';
 
 const isColumn = (id: string): id is TaskColumn => (TASK_COLUMNS as readonly string[]).includes(id);
 
@@ -25,16 +27,16 @@ function columnOf(ids: ColumnIds, id: string): TaskColumn | undefined {
   return isColumn(id) ? id : TASK_COLUMNS.find((column) => ids[column].includes(id));
 }
 
-export function Board({ onEdit }: { onEdit(id: string): void }) {
+export function Board({ route, onEdit }: { route: Route; onEdit(id: string): void }) {
   const { t } = useTranslation();
   const tasks = useSessionStore((state) => state.tasks);
   const sessions = useSessionStore((state) => state.sessions);
   const { setTasks, patchTask } = useSessionStore.getState();
-  const filters = useFilterStore();
+  const hiddenAgents = useSettingsStore((state) => state.hiddenAgents);
   const [preview, setPreview] = useState<ColumnIds | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const visible = useMemo(() => filterTasks(tasks, sessions, filters), [tasks, sessions, filters]);
+  const visible = useMemo(() => tasksForAgents(tasks, sessions, hiddenAgents), [tasks, sessions, hiddenAgents]);
   const ids = preview ?? idsOf(columnsOf(visible));
   const byId = useMemo(() => new Map(visible.map((task) => [task.id, task])), [visible]);
   const sensors = useSensors(
@@ -79,7 +81,7 @@ export function Board({ onEdit }: { onEdit(id: string): void }) {
 
   const create = async (title: string) => {
     try {
-      await api.createTask({ title, project: filters.project });
+      await api.createTask({ title });
       setTasks(await api.listTasks());
       setError(null);
     } catch (cause) {
@@ -96,6 +98,7 @@ export function Board({ onEdit }: { onEdit(id: string): void }) {
 
   return (
     <>
+      <ViewBar route={route} />
       {error ? (
         <p className="error-banner" role="alert">
           {error}

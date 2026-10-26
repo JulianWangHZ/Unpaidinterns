@@ -1,17 +1,8 @@
 {
   "nav": {
-    "island": "島",
+    "island": "辦公室",
     "board": "看板",
     "label": "檢視"
-  },
-  "filter": {
-    "allProjects": "所有專案",
-    "search": "搜尋任務",
-    "agents": "顯示 agent"
-  },
-  "language": {
-    "switch": "EN",
-    "label": "切換成英文"
   },
   "connection": {
     "reconnecting": "重新連線中…"
@@ -35,7 +26,11 @@
     "reply": "回覆 {{agent}}",
     "ended_one": "{{count}} 個 session 已結束",
     "ended_other": "{{count}} 個 session 已結束",
-    "edit": "編輯「{{title}}」"
+    "edit": "編輯「{{title}}」",
+    "doing": "正在做",
+    "lastReply": "最後回覆",
+    "started": "已開 {{time}}",
+    "updated": "{{time}} 前更新"
   },
   "editor": {
     "heading": "編輯任務",
@@ -98,6 +93,50 @@
       "needsYou": "等你回覆",
       "doneToday": "今日完成",
       "nothing": "目前沒有進行中的任務"
+    }
+  },
+  "settings": {
+    "open": "設定",
+    "title": "設定",
+    "agents": "顯示 agent",
+    "language": "語言",
+    "pipOpen": "開啟子母畫面",
+    "pipClose": "關閉子母畫面",
+    "pipActive": "正在子母畫面中顯示。",
+    "pipUnsupported": "需要 Chrome 或 Edge 116 以上。"
+  },
+  "chat": {
+    "title": "對話",
+    "loading": "正在載入對話…",
+    "noMessages": "還沒有訊息。",
+    "placeholder": "傳訊息給 {{agent}}",
+    "send": "送給 {{agent}}",
+    "back": "回到所有對話",
+    "typing": "工作中",
+    "more": "顯示全部",
+    "less": "收起",
+    "tools_one": "{{count}} 個工具呼叫",
+    "tools_other": "{{count}} 個工具呼叫",
+    "permission": "權限",
+    "mode": "送出方式",
+    "permissions": {
+      "readOnly": "唯讀",
+      "edit": "可編輯檔案",
+      "full": "可編輯並執行指令"
+    },
+    "modes": {
+      "resume": "接續同一個 session",
+      "fork": "分支新 session"
+    },
+    "fullTitle": "允許執行指令？",
+    "fullBody": "{{agent}} 將可以在這個專案裡直接執行 shell 指令，不會再詢問。",
+    "fullConfirm": "允許執行指令",
+    "runFailed": "訊息沒有完成：{{error}}",
+    "blocked": {
+      "working": "{{agent}} 正在工作，完成後就能傳訊息。",
+      "sending": "正在送給 {{agent}}…",
+      "terminal": "{{agent}} 正在終端機等你回答，請在終端機回覆。",
+      "unsupported": "目前還不支援傳訊息給 {{agent}}。"
     }
   }
 }
