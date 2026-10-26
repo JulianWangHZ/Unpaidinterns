@@ -2,6 +2,8 @@ import { useFrame } from '@react-three/fiber';
 import { useRef, type MutableRefObject } from 'react';
 import type { Group } from 'three';
 import type { Pose } from '../../lib/island/behavior.js';
+import type { Extra, Headwear } from '../../lib/scenes/types.js';
+import { ExtraMesh, HeadwearMesh } from './Outfit.js';
 
 const SKIN = '#ffe0c2';
 const SEATED: ReadonlySet<Pose> = new Set(['think', 'type', 'typeSlow', 'slump']);
@@ -16,10 +18,14 @@ interface FigureProps {
   position?: [number, number, number];
   facing?: number;
   seated?: boolean;
-  apron?: boolean;
+  headwear?: Headwear;
+  headwearColor?: string;
+  extra?: Extra;
   opacity?: number;
   scale?: number;
   still?: boolean;
+  /** Sit up on a chair seat instead of sinking to the floor. */
+  onChair?: boolean;
   motion?: MutableRefObject<Motion>;
 }
 
@@ -30,10 +36,13 @@ export function Figure({
   position = [0, 0, 0],
   facing = 0,
   seated,
-  apron,
+  headwear = 'none',
+  headwearColor = '#ffffff',
+  extra = 'none',
   opacity = 1,
   scale = 1,
   still = false,
+  onChair = false,
   motion,
 }: FigureProps) {
   const root = useRef<Group>(null);
@@ -49,7 +58,7 @@ export function Figure({
     if (!b || !h || !l || !r || !g) return;
     const t = still ? 0 : clock.elapsedTime + seed.current;
     const walking = motion?.current.walking ?? false;
-    b.position.y = isSeated && !walking ? -0.1 : 0;
+    b.position.y = isSeated && !walking ? (onChair ? 0.06 : -0.1) : 0;
     b.rotation.set(0, 0, 0);
     h.rotation.set(0, 0, 0);
     l.rotation.set(0, 0, 0);
@@ -126,17 +135,13 @@ export function Figure({
             <capsuleGeometry args={[0.14, 0.2, 6, 16]} />
             {material(color)}
           </mesh>
-          {apron ? (
-            <mesh position={[0, 0.3, 0.13]}>
-              <boxGeometry args={[0.18, 0.2, 0.02]} />
-              {material('#ffffff')}
-            </mesh>
-          ) : null}
+          <ExtraMesh kind={extra} />
           <group ref={head} position={[0, 0.6, 0]}>
             <mesh position={[0, 0.08, 0]} castShadow>
               <sphereGeometry args={[0.13, 20, 16]} />
               {material(SKIN)}
             </mesh>
+            <HeadwearMesh kind={headwear} color={headwearColor} />
           </group>
           {[
             { ref: left, x: -0.17 },

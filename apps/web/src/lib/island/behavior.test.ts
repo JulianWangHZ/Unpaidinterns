@@ -1,6 +1,6 @@
 import type { Session } from '@unpaidinterns/core';
 import { describe, expect, it } from 'vitest';
-import { placeAgents } from './behavior.js';
+import { placeAgents, seatIndexes } from './behavior.js';
 
 const MIN = 60_000;
 const NOW = 100 * MIN;
@@ -34,35 +34,75 @@ describe('placeAgents', () => {
 
   it('sends a just-finished agent to the coffee bar first', () => {
     expect(placeAgents([session('a', 'done', 20_000)], NOW).get('a')).toEqual({
-      at: { kind: 'amenity', amenity: 'coffee', seat: 0 },
+      at: { kind: 'activity', activity: 'coffee', seat: 0 },
       pose: 'sip',
     });
   });
 
   it('sends long-idle agents to the nap pods', () => {
     expect(placeAgents([session('a', 'idle', 26 * MIN)], NOW).get('a')?.at).toEqual({
-      kind: 'amenity',
-      amenity: 'nap',
+      kind: 'activity',
+      activity: 'nap',
       seat: 0,
     });
   });
 
-  it('pairs resting agents for KTV, then ping-pong, then solo amenities', () => {
-    const resting = ['a', 'b', 'c', 'd', 'e'].map((id) => session(id, 'done'));
-    const placed = placeAgents(resting, NOW);
-    expect(placed.get('a')?.at).toEqual({ kind: 'amenity', amenity: 'ktv', seat: 0 });
-    expect(placed.get('b')?.at).toEqual({ kind: 'amenity', amenity: 'ktv', seat: 1 });
-    expect(placed.get('c')?.at).toEqual({ kind: 'amenity', amenity: 'pingpong', seat: 0 });
-    expect(placed.get('d')?.at).toEqual({ kind: 'amenity', amenity: 'pingpong', seat: 1 });
-    expect(placed.get('e')?.at).toEqual({ kind: 'amenity', amenity: 'kitchen', seat: 0 });
+  it('moves resting agents to a new activity every few minutes', () => {
+    const agent = session('a', 'done');
+    const visited = new Set(
+      Array.from({ length: 8 }, (_, i) => {
+        const at = placeAgents([agent], NOW + i * 1.5 * MIN).get('a')?.at;
+        return at?.kind === 'activity' ? at.activity : 'desk';
+      }),
+    );
+    expect(visited.size).toBeGreaterThanOrEqual(4);
+    expect(visited.has('desk')).toBe(false);
+    expect(visited.has('nap')).toBe(false);
   });
 
-  it('sends a lone resting agent to a solo amenity instead of KTV', () => {
-    expect(placeAgents([session('a', 'done')], NOW).get('a')?.at).toMatchObject({ amenity: 'kitchen' });
+  it('moves at most once in any 90 seconds', () => {
+    for (const id of ['a', 'b', 'c']) {
+      const agent = session(id, 'done');
+      const samples = Array.from({ length: 10 }, (_, i) => JSON.stringify(placeAgents([agent], NOW + i * 9_000).get(id)));
+      const moves = samples.filter((spot, i) => i > 0 && spot !== samples[i - 1]).length;
+      expect(moves).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('spreads resting agents across activities instead of moving them in lockstep', () => {
+    const resting = ['a', 'b', 'c', 'd', 'e', 'f'].map((id) => session(id, 'done'));
+    const placed = placeAgents(resting, NOW);
+    const spots = new Set(resting.map((s) => JSON.stringify((placed.get(s.sessionId)?.at as { activity: string }).activity)));
+    expect(spots.size).toBeGreaterThanOrEqual(3);
+  });
+
+  it('gives agents that share an activity their own seat there', () => {
+    const resting = Array.from({ length: 14 }, (_, i) => session(`s${i}`, 'done'));
+    const placed = [...placeAgents(resting, NOW).values()].map((p) => p.at);
+    const keys = placed.map((at) => (at.kind === 'activity' ? `${at.activity}:${at.seat}` : at.kind));
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('goes straight back to the desk when new work arrives', () => {
+    expect(placeAgents([session('a', 'thinking', 10 * MIN)], NOW).get('a')?.at).toEqual({ kind: 'desk' });
   });
 
   it('makes interns follow their parent', () => {
     const placed = placeAgents([session('p', 'done', 20_000), session('p/i', 'running', 1000, 'p')], NOW);
     expect(placed.get('p/i')).toEqual({ at: { kind: 'withParent', parentSessionId: 'p' }, pose: 'type' });
+  });
+});
+
+describe('seatIndexes', () => {
+  it('orders main agents by start time, counts per kind and skips interns', () => {
+    const a = { ...session('a', 'running'), startedAt: 20 };
+    const b = { ...session('b', 'done'), startedAt: 10 };
+    const c = { ...session('c', 'running'), agent: 'codex' as const, startedAt: 15 };
+    const intern = session('a/i', 'running', 0, 'a');
+    expect([...seatIndexes([a, b, c, intern])]).toEqual([
+      ['b', { index: 0, agentIndex: 0 }],
+      ['c', { index: 1, agentIndex: 0 }],
+      ['a', { index: 2, agentIndex: 1 }],
+    ]);
   });
 });

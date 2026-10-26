@@ -1,6 +1,6 @@
 import type { SessionState } from '@unpaidinterns/core';
-import type { Hex } from '../../lib/island/hex.js';
-import { tileCentre } from '../../lib/island/positions.js';
+import type { Spot } from '../../lib/scenes/types.js';
+import { Workstation } from './furniture/Workstation.js';
 
 const SCREEN: Partial<Record<SessionState, string>> = {
   running: '#9be3c0',
@@ -10,32 +10,31 @@ const SCREEN: Partial<Record<SessionState, string>> = {
   error: '#ffb4a8',
 };
 
-export function Desk({ hex, state }: { hex: Hex; state: SessionState | undefined }) {
-  const [x, , z] = tileCentre(hex);
-  const screen = (state && SCREEN[state]) ?? '#5b5f97';
+/** One workstation placed at a seat. The status light and screen take the agent's state colour. */
+export function Desk({ spot, state }: { spot: Spot; state: SessionState | undefined }) {
+  const [x, y, z] = spot.position;
+  const tint = (state && SCREEN[state]) ?? null;
+  const seed = Math.round(x * 31 + z * 17 + y * 7);
   return (
-    <group position={[x, 0, z - 0.12]}>
-      <mesh position={[0, 0.36, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.7, 0.05, 0.36]} />
-        <meshStandardMaterial color="#ffd6e0" roughness={0.7} />
+    <group position={[x, y, z]} rotation={[0, spot.facing, 0]}>
+      <Workstation tint={tint} seed={seed} statusColor={tint ?? '#4a4677'} />
+    </group>
+  );
+}
+
+/** Ride ticket booth: staff stand behind the counter, facing the visitors. */
+export function Booth({ spot }: { spot: Spot }) {
+  const [x, , z] = spot.position;
+  const ahead = 0.5;
+  return (
+    <group position={[x + Math.sin(spot.facing) * ahead, 0, z + Math.cos(spot.facing) * ahead]} rotation={[0, spot.facing, 0]}>
+      <mesh position={[0, 0.25, 0]} castShadow>
+        <boxGeometry args={[0.8, 0.5, 0.2]} />
+        <meshStandardMaterial color="#fff3c4" />
       </mesh>
-      {[-0.3, 0.3].map((dx) => (
-        <mesh key={dx} position={[dx, 0.17, 0]} castShadow>
-          <boxGeometry args={[0.05, 0.34, 0.3]} />
-          <meshStandardMaterial color="#f5b8c8" />
-        </mesh>
-      ))}
-      <mesh position={[0, 0.55, -0.08]} castShadow>
-        <boxGeometry args={[0.36, 0.24, 0.03]} />
-        <meshStandardMaterial color="#4a4e7a" />
-      </mesh>
-      <mesh position={[0, 0.55, -0.064]}>
-        <planeGeometry args={[0.31, 0.19]} />
-        <meshStandardMaterial color={screen} emissive={screen} emissiveIntensity={state ? 0.55 : 0} />
-      </mesh>
-      <mesh position={[0, 0.16, 0.48]} castShadow>
-        <boxGeometry args={[0.28, 0.06, 0.26]} />
-        <meshStandardMaterial color="#8ec5ff" />
+      <mesh position={[0, 0.52, 0]}>
+        <boxGeometry args={[0.86, 0.05, 0.26]} />
+        <meshStandardMaterial color="#ff8fab" />
       </mesh>
     </group>
   );

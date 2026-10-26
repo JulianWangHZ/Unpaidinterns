@@ -22,6 +22,8 @@ export const agentEventSchema = z.object({
   parentSessionId: z.string().min(1).optional(),
   cwd: z.string(),
   project: z.string(),
+  /** Folder name of the git worktree the session runs in, when it is not the main checkout. */
+  worktree: z.string().min(1).optional(),
   state: sessionStateSchema,
   tool: z.string().optional(),
   detail: z.string().optional(),

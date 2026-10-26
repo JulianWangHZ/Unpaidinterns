@@ -69,18 +69,35 @@
     "overview": "全景",
     "loading": "正在搭建小島…",
     "noWebgl": "3D 需要 WebGL，但這個瀏覽器把它關掉了，先改用清單顯示。",
-    "focus": "放大 {{project}}",
     "agents": "Agent",
-    "empty": "島上很安靜。在任何專案啟動 Claude Code 或 Codex，這裡就會多一張桌子。"
+    "empty": "現在還沒有人。在任何專案啟動 Claude Code 或 Codex，就會有 agent 出現。"
   },
-  "amenity": {
-    "coffee": "咖啡吧台",
-    "kitchen": "廚房",
-    "ktv": "KTV",
-    "gym": "健身房",
-    "massage": "按摩室",
-    "ballpit": "球池",
-    "pingpong": "桌球",
-    "nap": "睡眠艙"
+  "scene": {
+    "label": "場景",
+    "office": "辦公室",
+    "park": "遊樂園",
+    "pool": "游泳池"
+  },
+  "office": {
+    "floor": {
+      "top": "頂層",
+      "middle": "中層",
+      "ground": "底層"
+    },
+    "room": {
+      "claude": "Claude 房",
+      "codex": "Codex 房",
+      "gemini": "Gemini 房",
+      "lounge": "休息室",
+      "rec": "娛樂室"
+    },
+    "working": "{{count}} 工作中",
+    "board": {
+      "title": "任務看板",
+      "inProgress": "進行中",
+      "needsYou": "等你回覆",
+      "doneToday": "今日完成",
+      "nothing": "目前沒有進行中的任務"
+    }
   }
 }

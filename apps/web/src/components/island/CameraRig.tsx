@@ -3,23 +3,27 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import { Vector3 } from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import type { Vec3 } from '../../lib/island/positions.js';
+import type { Vec3 } from '../../lib/scenes/types.js';
 
-const OVERVIEW_OFFSET = new Vector3(0, 10, 8.5);
-const CLOSE_OFFSET = new Vector3(0, 6.5, 5.5);
+interface CameraRigProps {
+  focus: Vec3 | null;
+  overviewTarget: Vec3;
+  overviewOffset: Vec3;
+  closeOffset: Vec3;
+  reducedMotion: boolean;
+}
 
-/** Orbit controls plus a short glide to whatever is focused. The user can still drag and zoom. */
-export function CameraRig({ focus, radius, reducedMotion }: { focus: Vec3 | null; radius: number; reducedMotion: boolean }) {
+/** Orbit controls plus a short glide to the selected agent or back to the scene overview. */
+export function CameraRig({ focus, overviewTarget, overviewOffset, closeOffset, reducedMotion }: CameraRigProps) {
   const controls = useRef<OrbitControlsImpl>(null);
   const { camera } = useThree();
   const goal = useRef<{ target: Vector3; position: Vector3 } | null>(null);
 
   useEffect(() => {
-    const target = focus ? new Vector3(...focus) : new Vector3(0, 0, 0);
-    // Scale the overview with the island so the whole thing always fits.
-    const zoom = focus ? CLOSE_OFFSET : OVERVIEW_OFFSET.clone().multiplyScalar(radius * 0.5);
-    goal.current = { target, position: target.clone().add(zoom) };
-  }, [focus, radius]);
+    const target = new Vector3(...(focus ?? overviewTarget));
+    const offset = new Vector3(...(focus ? closeOffset : overviewOffset));
+    goal.current = { target, position: target.clone().add(offset) };
+  }, [focus, overviewTarget, overviewOffset, closeOffset]);
 
   useFrame((_, delta) => {
     const orbit = controls.current;
@@ -38,10 +42,10 @@ export function CameraRig({ focus, radius, reducedMotion }: { focus: Vec3 | null
       makeDefault
       enablePan={false}
       enableDamping
-      minPolarAngle={0.35}
-      maxPolarAngle={1.15}
-      minDistance={4}
-      maxDistance={45}
+      minPolarAngle={0.3}
+      maxPolarAngle={1.6}
+      minDistance={3}
+      maxDistance={70}
       onStart={() => {
         goal.current = null;
       }}

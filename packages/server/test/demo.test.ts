@@ -41,3 +41,12 @@ describe('startDemo', () => {
     expect(hub.sessions().find((s) => s.sessionId === 'demo-1')?.updatedAt).toBe(2000);
   });
 });
+
+describe('demo worktree session', () => {
+  it('reports its main project and worktree', () => {
+    const hub = new SessionHub();
+    const stop = startDemo(hub, { now: () => 1000 });
+    expect(hub.sessions().find((s) => s.sessionId === 'demo-4')).toMatchObject({ project: 'api-server', worktree: 'fix-auth' });
+    stop();
+  });
+});

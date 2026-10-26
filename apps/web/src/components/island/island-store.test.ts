@@ -1,27 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { useIslandStore } from './island-store.js';
+import { readSavedScene, SCENE_STORAGE_KEY, useIslandStore } from './island-store.js';
+
+const storage = (value: string | null) => ({ getItem: (key: string) => (key === SCENE_STORAGE_KEY ? value : null) });
+
+describe('readSavedScene', () => {
+  it('returns a saved scene', () => {
+    expect(readSavedScene(storage('pool'))).toBe('pool');
+  });
+
+  it.each([null, 'moon'])('falls back to the office for %s', (value) => {
+    expect(readSavedScene(storage(value))).toBe('office');
+  });
+});
 
 describe('useIslandStore', () => {
-  it('focuses a district and clears any selected agent', () => {
+  it('switches scene, selects and hovers agents', () => {
     const store = useIslandStore.getState();
-    store.select('s1', 'web');
-    store.focus('api');
-    expect(useIslandStore.getState()).toMatchObject({ focusProject: 'api', selectedSession: null });
-  });
-
-  it('selecting an agent also focuses its project', () => {
-    useIslandStore.getState().select('s2', 'docs');
-    expect(useIslandStore.getState()).toMatchObject({ focusProject: 'docs', selectedSession: 's2' });
-  });
-
-  it('keeps the focused project when selecting without one', () => {
-    useIslandStore.getState().focus('web');
-    useIslandStore.getState().select('s3');
-    expect(useIslandStore.getState().focusProject).toBe('web');
-  });
-
-  it('tracks the hovered agent', () => {
-    useIslandStore.getState().hover('s4');
-    expect(useIslandStore.getState().hoveredSession).toBe('s4');
+    store.setScene('park');
+    store.select('s1');
+    store.hover('s2');
+    expect(useIslandStore.getState()).toMatchObject({ scene: 'park', selectedSession: 's1', hoveredSession: 's2' });
+    store.select(null);
+    expect(useIslandStore.getState().selectedSession).toBeNull();
   });
 });

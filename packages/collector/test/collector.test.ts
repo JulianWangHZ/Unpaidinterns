@@ -86,3 +86,18 @@ describe('startCollector', () => {
     expect(issues).toEqual([{ filePath: join(dir, 'd.jsonl'), reason: 'bad line' }]);
   });
 });
+
+describe('project resolution', () => {
+  it('replaces the project with the resolved one and adds the worktree', async () => {
+    await writeFile(join(dir, 'w.jsonl'), 'one\n');
+    collector = startCollector({
+      sources: [{ dir, createParser }],
+      onEvent: (event) => events.push(event),
+      maxFileAgeMs: HOUR,
+      usePolling: true,
+      resolveProject: () => ({ project: 'myapp', worktree: 'fix-login' }),
+    });
+    await collector.ready;
+    await vi.waitFor(() => expect(events[0]).toMatchObject({ project: 'myapp', worktree: 'fix-login' }));
+  });
+});

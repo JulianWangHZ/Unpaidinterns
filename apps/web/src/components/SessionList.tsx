@@ -1,4 +1,5 @@
 import type { Session } from '@unpaidinterns/core';
+import { projectLabel } from '../lib/labels.js';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AGENT_NAMES } from '../lib/agents.js';
@@ -22,7 +23,7 @@ function Section({ title, sessions }: { title: string; sessions: Session[] }) {
               {AGENT_NAMES[session.agent]}
               {session.parentSessionId ? ` · ${t('list.intern')}` : ''}
             </span>
-            <span className="project">{session.project}</span>
+            <span className="project">{projectLabel(session)}</span>
             <span className="state">{t(`state.${session.state}`)}</span>
             <code className="tool">{session.tool ?? ''}</code>
           </li>

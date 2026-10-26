@@ -1,14 +1,16 @@
 import { stateGroup, type Session } from '@unpaidinterns/core';
-import { useEffect, useMemo, useState } from 'react';
+import { projectLabel } from '../../lib/labels.js';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AGENT_NAMES } from '../../lib/agents.js';
-import { placeAgents } from '../../lib/island/behavior.js';
-import { assignSlots, buildLayout } from '../../lib/island/layout.js';
-import { loadSlots, saveSlots } from '../../lib/island/slots.js';
+import { placeAgents, seatIndexes } from '../../lib/island/behavior.js';
+import { SCENES } from '../../lib/scenes/index.js';
+import { SCENE_IDS } from '../../lib/scenes/types.js';
+import { useSceneManifest } from '../../lib/scenes/use-manifest.js';
 import { useSessionStore } from '../../store.js';
 import { AgentAvatar } from '../AgentAvatar.js';
 import { SessionList } from '../SessionList.js';
-import { useIslandStore } from './island-store.js';
+import { readSavedScene, SCENE_STORAGE_KEY, useIslandStore } from './island-store.js';
 import { IslandScene } from './IslandScene.js';
 
 const CLOCK_MS = 15_000;
@@ -44,6 +46,30 @@ function hasWebGl(): boolean {
 
 const rank = (session: Session) => ({ needsYou: 0, trouble: 0, working: 1, resting: 2 })[stateGroup(session.state)];
 
+function SceneTabs() {
+  const { t } = useTranslation();
+  const scene = useIslandStore((state) => state.scene);
+  const setScene = useIslandStore((state) => state.setScene);
+  return (
+    <div className="seg scene-tabs" role="tablist" aria-label={t('scene.label')}>
+      {SCENE_IDS.map((id) => (
+        <button
+          key={id}
+          type="button"
+          role="tab"
+          aria-selected={scene === id}
+          onClick={() => {
+            localStorage.setItem(SCENE_STORAGE_KEY, id);
+            setScene(id);
+          }}
+        >
+          {t(`scene.${id}`)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Sidebar({ sessions }: { sessions: Session[] }) {
   const { t } = useTranslation();
   const selected = useIslandStore((state) => state.selectedSession);
@@ -62,13 +88,13 @@ function Sidebar({ sessions }: { sessions: Session[] }) {
               className="side-row"
               data-state={session.state}
               aria-pressed={selected === session.sessionId}
-              onClick={() => select(session.sessionId, session.project)}
+              onClick={() => select(selected === session.sessionId ? null : session.sessionId)}
             >
               <AgentAvatar agent={session.agent} />
               <span className="side-main">
                 <span>
                   {AGENT_NAMES[session.agent]}
-                  {session.parentSessionId ? ` · ${t('list.intern')}` : ''} · {session.project}
+                  {session.parentSessionId ? ` · ${t('list.intern')}` : ''} · {projectLabel(session)}
                 </span>
                 <span className="side-state">{t(`state.${session.state}`)}</span>
               </span>
@@ -83,23 +109,22 @@ function Sidebar({ sessions }: { sessions: Session[] }) {
 export default function IslandView() {
   const { t } = useTranslation();
   const sessionMap = useSessionStore((state) => state.sessions);
-  const focusProject = useIslandStore((state) => state.focusProject);
+  const sceneId = useIslandStore((state) => state.scene);
   const selected = useIslandStore((state) => state.selectedSession);
-  const focus = useIslandStore((state) => state.focus);
+  const select = useIslandStore((state) => state.select);
   const now = useNow();
   const reducedMotion = useReducedMotion();
   const [webGl] = useState(hasWebGl);
+  const manifest = useSceneManifest(sceneId);
+  const stage = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    useIslandStore.getState().setScene(readSavedScene(localStorage));
+  }, []);
 
   const sessions = useMemo(() => Object.values(sessionMap), [sessionMap]);
-  const projects = useMemo(
-    () => [...new Set([...sessions].sort((a, b) => a.startedAt - b.startedAt).map((s) => s.project))],
-    [sessions],
-  );
-  const slots = useMemo(() => assignSlots(projects, loadSlots(localStorage)), [projects]);
-  useEffect(() => saveSlots(localStorage, slots), [slots]);
-
-  const layout = useMemo(() => buildLayout(sessions, slots), [sessions, slots]);
   const placements = useMemo(() => placeAgents(sessions, now), [sessions, now]);
+  const seats = useMemo(() => seatIndexes(sessions), [sessions]);
 
   if (!webGl) {
     return (
@@ -114,13 +139,24 @@ export default function IslandView() {
 
   return (
     <div className="island">
-      <div className="island-stage">
-        <IslandScene layout={layout} sessions={sessions} placements={placements} reducedMotion={reducedMotion} />
-        {focusProject || selected ? (
-          <button type="button" className="chip overview" onClick={() => focus(null)}>
-            {t('island.overview')}
-          </button>
-        ) : null}
+      <div className="island-stage" ref={stage}>
+        <IslandScene
+          htmlPortal={stage}
+          scene={SCENES[sceneId]}
+          manifest={manifest}
+          sessions={sessions}
+          placements={placements}
+          seats={seats}
+          reducedMotion={reducedMotion}
+        />
+        <div className="stage-bar">
+          <SceneTabs />
+          {selected ? (
+            <button type="button" className="chip overview" onClick={() => select(null)}>
+              {t('island.overview')}
+            </button>
+          ) : null}
+        </div>
         {sessions.length === 0 ? <p className="island-empty">{t('island.empty')}</p> : null}
       </div>
       <Sidebar sessions={sessions} />

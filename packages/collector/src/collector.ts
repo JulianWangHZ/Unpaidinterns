@@ -2,6 +2,7 @@ import type { Stats } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { watch, type FSWatcher } from 'chokidar';
 import type { AgentEvent } from '@unpaidinterns/core';
+import { createProjectResolver, type ProjectInfo } from './project.js';
 import { FileTailer } from './tailer.js';
 import type { LineParser, ParserFactory } from './types.js';
 
@@ -22,6 +23,8 @@ export interface CollectorOptions {
   maxFileAgeMs: number;
   usePolling?: boolean;
   now?: () => number;
+  /** Maps a working directory to its project; defaults to folding git worktrees into their main repo. */
+  resolveProject?: (cwd: string) => ProjectInfo;
 }
 
 export interface Collector {
@@ -34,6 +37,7 @@ const SESSION_FILE = /\.jsonl$/;
 export function startCollector(options: CollectorOptions): Collector {
   const tailer = new FileTailer();
   const now = options.now ?? Date.now;
+  const resolveProject = options.resolveProject ?? createProjectResolver();
   // One promise chain per file so overlapping change events never read the same bytes twice.
   const queues = new Map<string, Promise<void>>();
   const parsers = new Map<string, LineParser>();
@@ -53,7 +57,7 @@ export function startCollector(options: CollectorOptions): Collector {
     const parse = parserFor(source, filePath);
     for (const line of lines) {
       const result = parse(line);
-      if (result.kind === 'event') options.onEvent(result.event);
+      if (result.kind === 'event') options.onEvent({ ...result.event, ...resolveProject(result.event.cwd) });
       else if (result.kind === 'error') options.onParseError?.({ filePath, reason: result.reason });
     }
   }

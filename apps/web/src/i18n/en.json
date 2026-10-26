@@ -69,18 +69,35 @@
     "overview": "Overview",
     "loading": "Building the island…",
     "noWebgl": "3D needs WebGL, which this browser has turned off. Showing the list instead.",
-    "focus": "Zoom into {{project}}",
     "agents": "Agents",
-    "empty": "The island is quiet. Start Claude Code or Codex in any project and a desk appears here."
+    "empty": "Nobody is here yet. Start Claude Code or Codex in any project and an agent shows up."
   },
-  "amenity": {
-    "coffee": "Coffee bar",
-    "kitchen": "Kitchen",
-    "ktv": "KTV",
-    "gym": "Gym",
-    "massage": "Massage room",
-    "ballpit": "Ball pit",
-    "pingpong": "Ping-pong",
-    "nap": "Nap pods"
+  "scene": {
+    "label": "Scene",
+    "office": "Office",
+    "park": "Amusement park",
+    "pool": "Pool"
+  },
+  "office": {
+    "floor": {
+      "top": "Top floor",
+      "middle": "Middle floor",
+      "ground": "Ground floor"
+    },
+    "room": {
+      "claude": "Claude room",
+      "codex": "Codex room",
+      "gemini": "Gemini room",
+      "lounge": "Lounge",
+      "rec": "Rec room"
+    },
+    "working": "{{count}} working",
+    "board": {
+      "title": "Task board",
+      "inProgress": "In progress",
+      "needsYou": "Needs you",
+      "doneToday": "Done today",
+      "nothing": "Nothing in progress"
+    }
   }
 }

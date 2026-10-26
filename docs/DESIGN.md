@@ -57,44 +57,63 @@ Only status, tool name and project name go to the cloud. Raw session content nev
 - Three permission levels: read-only, can edit (default), full. Only "full" enables `Bash`, and selecting it requires an extra confirmation
 - At most one Runner per session at a time
 
-## 4. 3D island (`/island`)
+## 4. 3D scenes (`/island`)
 
-### 4.1 Layout
+### 4.1 Scenes
 
-- The island is built from hex tiles in a pastel diorama style
-- **Outer ring: work areas.** One district per project (grouped by session cwd); each tile holds one desk and one session. District positions persist; new projects grow into empty outer tiles
-- **Center: amenities**, 8 tiles: coffee bar, kitchen, KTV, gym, massage room, ball pit, ping-pong, nap pods
-- Clicking a district flies the camera in; "Overview" returns to the top view. Clicking an agent opens ChatPanel; hovering shows what it is doing
-- A side list mirrors the 3D view and serves as the keyboard and accessibility entry point
+- A tab bar switches between scenes: **Office** (default), **Amusement park** and **Pool**. The choice is remembered.
+- Each scene is one complete space with its own backdrop; there is no blank background.
+- A side list mirrors the 3D view and is the keyboard and accessibility entry point. Selecting an agent glides the camera to it; "Overview" returns.
 
-### 4.2 States and characters (office scene)
+### 4.2 Office
 
-States are grouped into 4 groups. Characters only change costume when the group changes, to avoid flicker:
+A cut-away tower seen from the open front, at night, with a lit skyline through floor-to-ceiling windows and around the building.
 
-| Group | States | Character and behavior |
+| Floor | Left | Right |
 |---|---|---|
-| Working | thinking, running tool, writing reply | Engineer at desk. Thinking: chin on hand. Running tool: typing, code scrolling on screen. Writing: slow typing |
-| Needs you | waiting for user | Stands up at the desk and waves; the tile shows an apricot pulse ring. Never leaves the desk |
-| Resting | done, idle | Goes to the coffee bar for ~1 minute first, then other amenities. Two or more sing KTV or play ping-pong together |
-| Trouble | error | Spills coffee, holds head |
+| Top | Claude room | Codex room |
+| Middle | Gemini room | Lounge: coffee bar, kitchen, KTV, massage chairs |
+| Ground | Rec room across the full width: billiards table, arcade cabinets, sofa, ball pit, vending machine, nap pods, task board | |
 
-- Idle over 30 minutes: goes to a nap pod, then fades out; the tile is reclaimed and the district shrinks
-- Subagents are "unpaid interns": smaller, semi-transparent, following their parent
-- A barista NPC always stands behind the coffee bar and does not represent any agent
-- Each character carries the official logo badge of its agent
+- Each agent room shows at least 8 workstations (desk, monitor, chair, keyboard, mouse, mug, one varied accessory). The monitor and a light strip on the desk front take the agent's state colour.
+- Rooms have a neon sign, a floor label on the slab edge ("Top floor · Claude room · 2 working"), a rug in the room accent colour, shelves, a lamp, a whiteboard and a clock.
+- The ground-floor task board shows the time and live Kanban counts: in progress, needs you, done today, plus up to three task titles.
+- A stair runs from the rec room up to the lounge through a real opening in the lounge floor, guarded by a glass rail.
 
-### 4.3 Scene packs and character packs
+### 4.3 Agent behaviour
 
-- A scene pack contains tile skins, props and a role table (state group to character). v1 ships only the office
-- Character spec: `.glb`, under 5k triangles, textures up to 1024px. Fixed animation names: `idle`, `think`, `type`, `wave`, `stretch`, `slump`, `walk`. Missing animations fall back to `idle`
-- `manifest.json` maps the character to an agent and sets scale and bubble height
-- v1 default characters are procedural but follow the same spec, so original characters dropped into `characters/` replace them without code changes
-- Future scene candidates: amusement park, Taiwanese night market, restaurant kitchen, water park, farm
+Placement is decided by a pure function of the sessions and the clock:
 
-### 4.4 Performance
+| State | Where |
+|---|---|
+| Thinking, running a tool, writing a reply | At the agent's own desk, with a pose per state |
+| Needs you | At the desk, waving, with an apricot pulse ring and a highlighted name tag |
+| Error | At the desk, slumped |
+| Done, first minute | Coffee bar, on a bar stool |
+| Idle | Moves every 90 seconds between kitchen, massage chairs, KTV, arcade, ball pit (inside it), billiards table and sofa (on the cushions). Each agent has its own order and timing |
+| Idle over 25 minutes | Nap pods |
 
-- Hex tiles use `InstancedMesh`; cap of ~60 agents
-- `frameloop="demand"` renders only when needed; rendering pauses when the tab is hidden
+- Every agent wears a name tag: agent, project and state. Subagents ("interns") are smaller and stay next to their parent.
+- Sessions running in a git worktree are shown under their main project as `project · worktree`. The collector resolves this from the worktree's `.git` pointer, or from the `.claude/worktrees/<name>` path when the folder is already gone.
+- Characters change floors directly; walking down the stair is future work.
+
+### 4.4 Outdoor scenes
+
+- **Amusement park**: grass, ferris wheel, carousel, stage, food stand, tent and bench, with hills and a distant town. Staff work at ride booths.
+- **Pool**: deck with a lane pool, sun loungers, grill and diving board, with sea, islands and a distant hotel. Swimmers hold a lane each.
+- Outfits change by state group: caps, mascot suit, balloon and clown nose in the park; swim cap, lifeguard and float ring at the pool.
+
+### 4.5 Scene models
+
+- `apps/web/public/scenes/<scene>/manifest.json` can map each state group to a `.glb` character. Missing entries fall back to the built-in figure.
+- Model spec: binary glTF, about 1 unit tall, feet at the origin, facing +Z, under 5k triangles, textures up to 1024 px, clips named `idle`, `think`, `type`, `wave`, `stretch`, `slump`, `walk`.
+- File names are restricted to `[A-Za-z0-9_-]+.glb` inside the scene folder.
+
+### 4.6 Performance
+
+- The 3D bundle is lazy-loaded; the board never downloads it.
+- Ball pit balls are one instanced mesh; glowing surfaces use emissive materials instead of extra lights. The office holds about 55–60 fps.
+- Textures (screens, facades, wood, felt, menus) are drawn once on canvases and cached.
 
 ## 5. Kanban (`/board`)
 

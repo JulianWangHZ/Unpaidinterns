@@ -1,30 +1,39 @@
 import type { Session } from '@unpaidinterns/core';
+import { projectLabel } from '../../lib/labels.js';
 import { stateGroup } from '@unpaidinterns/core';
 import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { useRef } from 'react';
+import { Suspense, useRef, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Vector3, type Group } from 'three';
 import { AGENT_NAMES } from '../../lib/agents.js';
 import type { Pose } from '../../lib/island/behavior.js';
-import type { Spot } from '../../lib/island/positions.js';
+import type { Outfit, Spot } from '../../lib/scenes/types.js';
+import { AgentBadge } from './Outfit.js';
 import { Figure, type Motion } from './Figure.js';
 import { useIslandStore } from './island-store.js';
+import { ModelCharacter } from './ModelCharacter.js';
 
 export const AGENT_COLORS = { claude: '#e07a5f', codex: '#10a37f', gemini: '#4285f4' } as const;
 
-const WALK_SPEED = 1.6;
+// Units per second, scaled with the character so big indoor scenes do not take forever to cross.
+const WALK_SPEED = 2.4;
 const ARRIVED = 0.02;
 
 interface CharacterProps {
   session: Session;
   spot: Spot;
   pose: Pose;
+  outfit: Outfit;
+  model: { url: string; scale: number } | null;
+  nameTag: boolean;
+  scale: number;
+  htmlPortal: RefObject<HTMLDivElement | null>;
   reducedMotion: boolean;
 }
 
-/** One agent on the island. It walks to its spot, then plays the pose for its state. */
-export function Character({ session, spot, pose, reducedMotion }: CharacterProps) {
+/** One agent in the scene. It walks to its spot, then plays the pose for its state. */
+export function Character({ session, spot, pose, outfit, model, nameTag, scale, htmlPortal, reducedMotion }: CharacterProps) {
   const { t } = useTranslation();
   const group = useRef<Group>(null);
   const motion = useRef<Motion>({ walking: false });
@@ -36,6 +45,8 @@ export function Character({ session, spot, pose, reducedMotion }: CharacterProps
   const selected = useIslandStore((state) => state.selectedSession === session.sessionId);
   const intern = Boolean(session.parentSessionId);
   const alert = ['needsYou', 'trouble'].includes(stateGroup(session.state));
+  const brand = AGENT_COLORS[session.agent];
+  const height = (outfit.headwear === 'mascot' ? 1.05 : 0.95) * scale;
 
   useFrame((_, delta) => {
     const node = group.current;
@@ -43,20 +54,35 @@ export function Character({ session, spot, pose, reducedMotion }: CharacterProps
     target.current.set(...spot.position);
     const offset = target.current.clone().sub(node.position);
     const distance = offset.length();
-    if (reducedMotion || distance > 12) {
+    // Changing floors jumps straight there; walking would cut through the ceiling.
+    if (reducedMotion || distance > 14 || Math.abs(offset.y) > 0.5) {
       node.position.copy(target.current);
     } else if (distance > ARRIVED) {
-      node.position.add(offset.multiplyScalar(Math.min(1, (WALK_SPEED * delta) / distance)));
+      node.position.add(offset.multiplyScalar(Math.min(1, (WALK_SPEED * scale * delta) / distance)));
       node.rotation.y = Math.atan2(offset.x, offset.z);
     }
     motion.current.walking = !reducedMotion && distance > ARRIVED;
     if (!motion.current.walking) node.rotation.y = spot.facing;
   });
 
+  const figure = (
+    <Figure
+      color={outfit.body ?? brand}
+      headwear={outfit.headwear}
+      headwearColor={outfit.headwearColor}
+      extra={outfit.extra}
+      pose={pose}
+      motion={motion}
+      still={reducedMotion}
+      onChair={scale > 1}
+    />
+  );
+
   return (
     <group
       ref={group}
       position={start.current}
+      scale={(intern ? 0.72 : 1) * scale}
       onPointerOver={(event) => {
         event.stopPropagation();
         hover(session.sessionId);
@@ -64,23 +90,40 @@ export function Character({ session, spot, pose, reducedMotion }: CharacterProps
       onPointerOut={() => hover(null)}
       onClick={(event) => {
         event.stopPropagation();
-        select(session.sessionId, session.project);
+        select(session.sessionId);
       }}
     >
-      <Figure
-        color={AGENT_COLORS[session.agent]}
-        pose={pose}
-        motion={motion}
-        still={reducedMotion}
-        scale={intern ? 0.72 : 1}
-        opacity={intern ? 0.75 : 1}
-      />
-      {/* The Html node stays mounted; toggling it on hover would make drei detach DOM nodes mid-render. */}
-      <Html position={[0, intern ? 0.85 : 1.08, 0]} center zIndexRange={[20, 0]} style={{ pointerEvents: 'none' }}>
-        <div className="bubble" data-alert={alert || undefined} hidden={!(alert || hovered || selected)}>
-          <strong>{AGENT_NAMES[session.agent]}</strong> · {t(`state.${session.state}`)}
-          {hovered || selected ? <span className="bubble-tool">{session.tool ?? session.project}</span> : null}
-        </div>
+      {model ? (
+        <Suspense fallback={figure}>
+          <ModelCharacter url={model.url} scale={model.scale} pose={pose} motion={motion} />
+        </Suspense>
+      ) : (
+        figure
+      )}
+      <AgentBadge color={brand} height={height / scale} />
+      {/* Always mounted, into a fixed container: remounting drei Html under React 19 can leave it empty. */}
+      <Html
+        portal={htmlPortal as RefObject<HTMLElement>}
+        position={[0, (height + 0.22) / scale, 0]}
+        center
+        zIndexRange={[40, 21]}
+        style={{ pointerEvents: 'none' }}
+      >
+        {nameTag ? (
+          <div className="nametag" data-alert={alert || undefined} data-selected={hovered || selected || undefined}>
+            <span className="nt-name" style={{ background: brand }}>
+              {AGENT_NAMES[session.agent]}
+              {intern ? ` · ${t('list.intern')}` : ''} · {projectLabel(session)}
+            </span>
+            <span className="nt-state">{t(`state.${session.state}`)}</span>
+            {hovered || selected ? <span className="nt-tool">{session.tool ?? ''}</span> : null}
+          </div>
+        ) : (
+          <div className="bubble" data-alert={alert || undefined} hidden={!(alert || hovered || selected)}>
+            <strong>{AGENT_NAMES[session.agent]}</strong> · {t(`state.${session.state}`)}
+            {hovered || selected ? <span className="bubble-tool">{projectLabel(session)}{session.tool ? ` · ${session.tool}` : ''}</span> : null}
+          </div>
+        )}
       </Html>
     </group>
   );

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { projectLabel } from '../lib/labels.js';
 import { useTranslation } from 'react-i18next';
 import { AGENT_NAMES } from '../lib/agents.js';
 import { api } from '../lib/api.js';
@@ -84,7 +85,7 @@ export function TaskEditor({ taskId, projects, onClose }: { taskId: string; proj
               />
               <AgentAvatar agent={session.agent} />
               <span>
-                {AGENT_NAMES[session.agent]} · {session.project} · {t(`state.${session.state}`)}
+                {AGENT_NAMES[session.agent]} · {projectLabel(session)} · {t(`state.${session.state}`)}
               </span>
             </label>
           ))}

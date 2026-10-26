@@ -1,117 +1,163 @@
-import type { Session } from '@unpaidinterns/core';
+import type { AgentKind, Session } from '@unpaidinterns/core';
 import { stateGroup } from '@unpaidinterns/core';
-import { ContactShadows, Html } from '@react-three/drei';
+import { ContactShadows } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import type { Placement } from '../../lib/island/behavior.js';
-import type { IslandLayout } from '../../lib/island/layout.js';
-import { amenitySeat, deskSpot, internOffset, tileCentre, type Spot, type Vec3 } from '../../lib/island/positions.js';
-import { AmenityProps } from './Amenities.js';
+import { useMemo, type RefObject } from 'react';
+import type { Placement, SeatIndex } from '../../lib/island/behavior.js';
+import { internSpot, spotAtActivity } from '../../lib/scenes/index.js';
+import { modelUrl, type SceneManifest } from '../../lib/scenes/manifest.js';
+import { DESKS_PER_ROOM } from '../../lib/scenes/office.js';
+import { ACTIVITIES, type SceneDefinition, type Spot, type Vec3 } from '../../lib/scenes/types.js';
+import { ActivityProps } from './ActivityProps.js';
+import { Backdrop, SKIES } from './Backdrops.js';
 import { CameraRig } from './CameraRig.js';
 import { Character } from './Character.js';
-import { Desk } from './Desk.js';
+import { Booth, Desk } from './Desk.js';
+import { Environment } from './Environments.js';
 import { useIslandStore } from './island-store.js';
+import { OfficeLabels } from './office/OfficeLabels.js';
 import { PulseRing } from './PulseRing.js';
-import { IslandBase, Tiles } from './Tiles.js';
+import { skyTexture } from './textures.js';
 
 interface SceneProps {
-  layout: IslandLayout;
+  scene: SceneDefinition;
+  manifest: SceneManifest | null;
   sessions: Session[];
   placements: Map<string, Placement>;
+  seats: Map<string, SeatIndex>;
   reducedMotion: boolean;
+  /** Container for label overlays; it exists before the canvas, so labels never have to remount. */
+  htmlPortal: RefObject<HTMLDivElement | null>;
 }
 
-function spotsFor(layout: IslandLayout, sessions: Session[], placements: Map<string, Placement>): Map<string, Spot> {
-  const seats = new Map(layout.districts.flatMap((d) => d.seats.map((seat) => [seat.sessionId, seat.hex] as const)));
-  const amenityHex = new Map(layout.amenities.map(({ amenity, hex }) => [amenity, hex] as const));
+const KINDS: readonly AgentKind[] = ['claude', 'codex', 'gemini'];
+
+function deskSpot(scene: SceneDefinition, session: Session, seat: SeatIndex): Spot {
+  return scene.seatAt(seat.index, session.agent, seat.agentIndex);
+}
+
+function spotsFor(scene: SceneDefinition, sessions: Session[], placements: Map<string, Placement>, seats: Map<string, SeatIndex>) {
   const spots = new Map<string, Spot>();
   for (const session of sessions.filter((s) => !s.parentSessionId)) {
     const placement = placements.get(session.sessionId);
-    const desk = seats.get(session.sessionId);
-    if (!placement || !desk) continue;
-    const hex = placement.at.kind === 'amenity' ? amenityHex.get(placement.at.amenity) : undefined;
-    spots.set(session.sessionId, hex && placement.at.kind === 'amenity' ? amenitySeat(hex, placement.at.seat) : deskSpot(desk));
+    const seat = seats.get(session.sessionId);
+    if (!placement || !seat) continue;
+    const at = placement.at;
+    spots.set(session.sessionId, at.kind === 'activity' ? spotAtActivity(scene, at.activity, at.seat) : deskSpot(scene, session, seat));
   }
   for (const intern of sessions.filter((s) => s.parentSessionId)) {
     const parent = spots.get(intern.parentSessionId as string);
-    if (parent) spots.set(intern.sessionId, { position: internOffset(parent.position), facing: parent.facing });
+    if (parent) spots.set(intern.sessionId, internSpot(parent));
   }
   return spots;
 }
 
-function DistrictLabels({ layout }: { layout: IslandLayout }) {
-  const { t } = useTranslation();
-  const focus = useIslandStore((state) => state.focus);
+/** Office rooms always show a full set of desks; occupied ones light up in their agent's state colour. */
+function OfficeDesks({ scene, sessions, placements, seats }: Omit<SceneProps, 'manifest' | 'reducedMotion' | 'htmlPortal'>) {
+  const byKindIndex = new Map<string, Session>();
+  for (const session of sessions) {
+    const seat = seats.get(session.sessionId);
+    if (seat) byKindIndex.set(`${session.agent}:${seat.agentIndex}`, session);
+  }
   return (
     <>
-      {layout.districts.map((district) => {
-        const [x, , z] = tileCentre(district.anchor);
-        return (
-          <Html key={district.project} position={[x, 1.9, z]} center zIndexRange={[20, 0]}>
-            <button
-              type="button"
-              className="district-label"
-              style={{ background: district.color }}
-              aria-label={t('island.focus', { project: district.project })}
-              onClick={() => focus(district.project)}
-            >
-              {district.project} <small>{district.seats.length}</small>
-            </button>
-          </Html>
-        );
+      {KINDS.flatMap((agent) => {
+        const used = sessions.filter((s) => s.agent === agent && seats.has(s.sessionId)).length;
+        return Array.from({ length: Math.max(DESKS_PER_ROOM, used) }, (_, agentIndex) => {
+          const session = byKindIndex.get(`${agent}:${agentIndex}`);
+          const atDesk = session && placements.get(session.sessionId)?.at.kind === 'desk';
+          return (
+            <Desk key={`${agent}-${agentIndex}`} spot={scene.seatAt(0, agent, agentIndex)} state={atDesk ? session.state : undefined} />
+          );
+        });
       })}
     </>
   );
 }
 
-export function IslandScene({ layout, sessions, placements, reducedMotion }: SceneProps) {
-  const focusProject = useIslandStore((state) => state.focusProject);
-  const selected = useIslandStore((state) => state.selectedSession);
-  const spots = useMemo(() => spotsFor(layout, sessions, placements), [layout, sessions, placements]);
-  const byId = useMemo(() => new Map(sessions.map((s) => [s.sessionId, s])), [sessions]);
+function Workstations(props: Omit<SceneProps, 'manifest' | 'reducedMotion' | 'htmlPortal'>) {
+  const { scene, sessions, seats } = props;
+  if (scene.id === 'office') return <OfficeDesks {...props} />;
+  if (scene.id !== 'park') return null;
+  return (
+    <>
+      {sessions.map((session) => {
+        const seat = seats.get(session.sessionId);
+        return seat ? <Booth key={session.sessionId} spot={deskSpot(scene, session, seat)} /> : null;
+      })}
+    </>
+  );
+}
 
-  const focus: Vec3 | null = useMemo(() => {
-    const picked = selected ? spots.get(selected) : undefined;
-    if (picked) return picked.position;
-    const district = layout.districts.find((d) => d.project === focusProject);
-    return district ? tileCentre(district.anchor) : null;
-  }, [selected, spots, layout, focusProject]);
+function Lights({ night }: { night: boolean }) {
+  return night ? (
+    <>
+      <hemisphereLight args={['#9a90d8', '#2a2445', 0.9]} />
+      <directionalLight position={[4, 14, 18]} intensity={0.55} color="#c9c3ff" castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0005}>
+        <orthographicCamera attach="shadow-camera" args={[-14, 14, 14, -14, 1, 60]} />
+      </directionalLight>
+    </>
+  ) : (
+    <>
+      <hemisphereLight args={['#ffffff', '#c3c9ee', 1.6]} />
+      <directionalLight position={[6, 14, 8]} intensity={1.3} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0005}>
+        <orthographicCamera attach="shadow-camera" args={[-14, 14, 14, -14, 1, 45]} />
+      </directionalLight>
+    </>
+  );
+}
+
+export function IslandScene({ scene, manifest, sessions, placements, seats, reducedMotion, htmlPortal }: SceneProps) {
+  const selected = useIslandStore((state) => state.selectedSession);
+  const spots = useMemo(() => spotsFor(scene, sessions, placements, seats), [scene, sessions, placements, seats]);
+  const focus: Vec3 | null = (selected && spots.get(selected)?.position) || null;
+  const night = scene.lighting === 'night';
+  const [skyTop, skyBottom] = SKIES[scene.id];
 
   return (
-    <Canvas flat shadows="percentage" camera={{ position: [0, 25, 21], fov: 32 }} dpr={[1, 2]}>
-      <color attach="background" args={['#eef0fb']} />
-      <hemisphereLight args={['#ffffff', '#c3c9ee', 1.6]} />
-      <directionalLight position={[6, 12, 8]} intensity={1.3} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0005}>
-        <orthographicCamera attach="shadow-camera" args={[-14, 14, 14, -14, 1, 40]} />
-      </directionalLight>
-      <IslandBase radius={layout.radius} />
-      <Tiles tiles={layout.tiles} />
-      <ContactShadows position={[0, -2.2, 0]} scale={layout.radius * 5} blur={2.4} opacity={0.25} far={4} />
-      {layout.amenities.map(({ amenity, hex }) => (
-        <AmenityProps key={amenity} amenity={amenity} hex={hex} />
+    <Canvas flat shadows="percentage" camera={{ position: [0, 7, 33], fov: 26, far: 700 }} dpr={[1, 2]}>
+      <primitive attach="background" object={skyTexture(skyTop, skyBottom)} />
+      <fog attach="fog" args={[skyBottom, night ? 60 : 70, night ? 200 : 230]} />
+      {/* Keyed so switching scenes rebuilds the lights; R3F does not reset props that are dropped. */}
+      <Lights key={scene.lighting} night={night} />
+      <Backdrop scene={scene.id} />
+      <Environment scene={scene} seatCount={seats.size} />
+      {night ? null : <ContactShadows position={[0, 0.005, 0]} scale={30} blur={2} opacity={0.18} far={2} />}
+      {ACTIVITIES.map((activity) => (
+        <ActivityProps key={activity} scene={scene.id} activity={activity} position={scene.activities[activity]} />
       ))}
-      {layout.districts.flatMap((district) =>
-        district.seats.map((seat) => {
-          const state = byId.get(seat.sessionId)?.state;
-          const alert = state ? ['needsYou', 'trouble'].includes(stateGroup(state)) : false;
-          return (
-            <group key={seat.sessionId}>
-              <Desk hex={seat.hex} state={placements.get(seat.sessionId)?.at.kind === 'desk' ? state : undefined} />
-              {alert ? <PulseRing hex={seat.hex} still={reducedMotion} /> : null}
-            </group>
-          );
-        }),
-      )}
+      <Workstations scene={scene} sessions={sessions} placements={placements} seats={seats} />
+      {scene.id === 'office' ? <OfficeLabels sessions={sessions} /> : null}
       {sessions.map((session) => {
         const spot = spots.get(session.sessionId);
         const placement = placements.get(session.sessionId);
-        return spot && placement ? (
-          <Character key={session.sessionId} session={session} spot={spot} pose={placement.pose} reducedMotion={reducedMotion} />
-        ) : null;
+        if (!spot || !placement) return null;
+        const group = stateGroup(session.state);
+        const character = manifest?.characters[group];
+        return (
+          <group key={session.sessionId}>
+            {group === 'needsYou' || group === 'trouble' ? <PulseRing position={spot.position} still={reducedMotion} /> : null}
+            <Character
+              session={session}
+              spot={spot}
+              pose={placement.at.kind === 'activity' ? (scene.activityPose?.[placement.at.activity] ?? placement.pose) : placement.pose}
+              outfit={scene.outfits[group]}
+              model={character ? { url: modelUrl(scene.id, character.file), scale: character.scale } : null}
+              nameTag={scene.nameTags}
+              scale={scene.characterScale}
+              htmlPortal={htmlPortal}
+              reducedMotion={reducedMotion}
+            />
+          </group>
+        );
       })}
-      <DistrictLabels layout={layout} />
-      <CameraRig focus={focus} radius={layout.radius} reducedMotion={reducedMotion} />
+      <CameraRig
+        focus={focus}
+        overviewTarget={scene.cameraTarget}
+        overviewOffset={scene.cameraOffset}
+        closeOffset={scene.closeOffset}
+        reducedMotion={reducedMotion}
+      />
     </Canvas>
   );
 }
