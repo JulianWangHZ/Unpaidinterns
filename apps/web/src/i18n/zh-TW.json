@@ -138,5 +138,11 @@
       "terminal": "{{agent}} 正在終端機等你回答，請在終端機回覆。",
       "unsupported": "目前還不支援傳訊息給 {{agent}}。"
     }
+  },
+  "summary": {
+    "label": "Agent 狀態",
+    "needsYou": "需要你",
+    "working": "工作中",
+    "done": "已完成"
   }
 }

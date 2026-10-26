@@ -64,6 +64,73 @@ textarea {
   letter-spacing: -0.02em;
 }
 
+/* Headline agent counts, on the right of the title row. */
+
+.status-summary {
+  display: flex;
+  align-items: stretch;
+  margin: 0 0 0 auto;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 0 1px 2px #2e315014, 0 2px 6px #2e31500f;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 64px;
+  padding: 2px 14px;
+}
+
+.stat + .stat {
+  border-left: 1px solid var(--line);
+}
+
+.stat dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.stat dt::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c9cdeb;
+}
+
+.stat[data-kind='needsYou'][data-active] dt::before {
+  background: var(--needs-you);
+  box-shadow: 0 0 0 3px #ff9f1c33;
+}
+
+.stat[data-kind='working'][data-active] dt::before {
+  background: #6f9dff;
+}
+
+.stat[data-kind='done'][data-active] dt::before {
+  background: var(--done);
+}
+
+.stat dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.stat[data-kind='needsYou'][data-active] dd {
+  color: var(--needs-you-ink);
+}
+
 .seg {
   display: flex;
   height: var(--control);

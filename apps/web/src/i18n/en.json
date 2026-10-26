@@ -138,5 +138,11 @@
       "terminal": "{{agent}} is waiting for your answer in its terminal. Reply there.",
       "unsupported": "Messaging {{agent}} is not supported yet."
     }
+  },
+  "summary": {
+    "label": "Agent status",
+    "needsYou": "Needs you",
+    "working": "Working",
+    "done": "Done"
   }
 }

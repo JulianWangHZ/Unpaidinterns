@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useSessionStore } from '../store.js';
+import { StatusSummary } from './StatusSummary.js';
 
 export function Header() {
   const { t } = useTranslation();
@@ -12,6 +13,7 @@ export function Header() {
           {t('connection.reconnecting')}
         </span>
       ) : null}
+      <StatusSummary />
     </header>
   );
 }
