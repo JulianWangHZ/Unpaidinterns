@@ -1,4 +1,4 @@
-import type { RunStatus, ServerMessage, Session, Task, TaskPatch } from '@unpaidinterns/core';
+import type { ServerMessage, Session, Task, TaskPatch } from '@unpaidinterns/core';
 import { create } from 'zustand';
 import type { ConnectionStatus } from './lib/socket.js';
 
@@ -13,7 +13,6 @@ export function reduceMessage(sessions: SessionMap, message: ServerMessage): Ses
     case 'remove':
       return Object.fromEntries(Object.entries(sessions).filter(([id]) => id !== message.sessionId));
     case 'tasks':
-    case 'run':
       return sessions;
   }
 }
@@ -22,16 +21,9 @@ export function applyTaskPatch(tasks: readonly Task[], id: string, patch: TaskPa
   return tasks.map((task) => (task.id === id ? { ...task, ...patch } : task));
 }
 
-export interface RunState {
-  status: RunStatus;
-  error?: string;
-}
-
 interface SessionStore {
   sessions: SessionMap;
   tasks: Task[];
-  /** Latest message run per session, so the chat can show progress and failures. */
-  runs: Readonly<Record<string, RunState>>;
   status: ConnectionStatus;
   apply(message: ServerMessage): void;
   setStatus(status: ConnectionStatus): void;
@@ -42,15 +34,10 @@ interface SessionStore {
 export const useSessionStore = create<SessionStore>()((set) => ({
   sessions: {},
   tasks: [],
-  runs: {},
   status: 'connecting',
   apply: (message) =>
     set((state) => {
       if (message.type === 'tasks') return { tasks: message.tasks };
-      if (message.type === 'run') {
-        const run: RunState = message.error ? { status: message.status, error: message.error } : { status: message.status };
-        return { runs: { ...state.runs, [message.sessionId]: run } };
-      }
       return { sessions: reduceMessage(state.sessions, message) };
     }),
   setStatus: (status) => set({ status }),

@@ -1,15 +1,17 @@
 import { projectName, type AgentEvent } from '@unpaidinterns/core';
 import type { SessionHub } from './session-hub.js';
 
-type DemoIdentity = Pick<AgentEvent, 'agent' | 'sessionId' | 'cwd' | 'parentSessionId' | 'worktree'> & { project?: string };
+type DemoIdentity = Pick<AgentEvent, 'agent' | 'sessionId' | 'cwd' | 'parentSessionId' | 'worktree' | 'title' | 'prompt' | 'model'> & {
+  project?: string;
+};
 type DemoStep = Pick<AgentEvent, 'state' | 'tool' | 'detail'>;
 
 const DEMO_SESSIONS: readonly DemoIdentity[] = [
-  { agent: 'claude', sessionId: 'demo-1', cwd: '/demo/web-app' },
-  { agent: 'claude', sessionId: 'demo-1/agent-a', cwd: '/demo/web-app', parentSessionId: 'demo-1' },
-  { agent: 'codex', sessionId: 'demo-2', cwd: '/demo/api-server' },
-  { agent: 'gemini', sessionId: 'demo-3', cwd: '/demo/docs-site' },
-  { agent: 'claude', sessionId: 'demo-4', cwd: '/demo/api-server/.claude/worktrees/fix-auth', project: 'api-server', worktree: 'fix-auth' },
+  { agent: 'claude', sessionId: 'demo-1', cwd: '/demo/web-app', title: 'Move login to server actions', prompt: 'Move the login form to a server action and keep the redirect', model: 'claude-opus-5-5' },
+  { agent: 'claude', sessionId: 'demo-1/agent-a', cwd: '/demo/web-app', parentSessionId: 'demo-1', prompt: 'Find every caller of signIn()', model: 'claude-sonnet-5' },
+  { agent: 'codex', sessionId: 'demo-2', cwd: '/demo/api-server', prompt: 'Add rate limiting to the public API', model: 'gpt-5-codex' },
+  { agent: 'gemini', sessionId: 'demo-3', cwd: '/demo/docs-site', title: 'Docs search', prompt: 'Make the docs search fuzzy', model: 'gemini-3-pro' },
+  { agent: 'claude', sessionId: 'demo-4', cwd: '/demo/api-server/.claude/worktrees/fix-auth', project: 'api-server', worktree: 'fix-auth', title: 'Fix token refresh', prompt: 'Why do tokens expire early?', model: 'claude-opus-5-5' },
 ];
 
 // The script length equals the session count so each tick shows every state once.

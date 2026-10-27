@@ -1,10 +1,10 @@
 import type { Session } from '@unpaidinterns/core';
 import { stateGroup } from '@unpaidinterns/core';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AGENT_ICONS } from '../../lib/agent-icons.js';
 import { AGENT_NAMES } from '../../lib/agents.js';
-import { formatDuration } from '../../lib/duration.js';
+import { resumeCommand, timeLabel } from '../../lib/session-card.js';
 
 function useTicker(ms: number): number {
   const [now, setNow] = useState(Date.now);
@@ -15,56 +15,76 @@ function useTicker(ms: number): number {
   return now;
 }
 
-/** What one agent is doing, shown on hover over its character. */
-export function AgentCard({ session }: { session: Session }) {
+function CopyResume({ session }: { session: Session }) {
   const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    await navigator.clipboard?.writeText(resumeCommand(session));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1400);
+  };
+  return (
+    <button type="button" className="ac-copy" onClick={() => void copy()} title={resumeCommand(session)}>
+      {copied ? t('card.copied') : t('card.copyResume')}
+    </button>
+  );
+}
+
+/**
+ * Everything worth knowing about one session, shown over its character.
+ * Hovering shows it; clicking pins it so the copy button can be used.
+ */
+export function AgentCard({ session, pinned }: { session: Session; pinned: boolean }) {
+  const { t, i18n } = useTranslation();
   const now = useTicker(1000);
   const group = stateGroup(session.state);
-  const card = useRef<HTMLDivElement>(null);
-  const [shift, setShift] = useState({ x: 0, y: 0 });
-
-  // Keep the card inside the scene: nudge it sideways at the edges and drop it below the tag near the top.
-  useLayoutEffect(() => {
-    const node = card.current;
-    const stage = node?.closest('.island-stage');
-    if (!node || !stage) return;
-    const box = node.getBoundingClientRect();
-    const bounds = stage.getBoundingClientRect();
-    const margin = 8;
-    const x = Math.max(bounds.left + margin - box.left, Math.min(0, bounds.right - margin - box.right));
-    const y = box.top < bounds.top + margin ? box.height + 56 : 0;
-    setShift({ x, y });
-  }, []);
+  const working = group === 'working';
+  const intern = session.parentSessionId ? ` · ${t('list.intern')}` : '';
+  const showText = !session.parentSessionId || working;
+  const title = session.title && session.title !== session.project ? session.title : null;
 
   return (
-    <div ref={card} className="agent-card" data-group={group} style={{ marginLeft: shift.x, marginBottom: -shift.y }}>
+    <div className="agent-card" data-group={group} data-pinned={pinned || undefined}>
       <header>
-        <img src={AGENT_ICONS[session.agent]} alt="" width={18} height={18} />
-        <div className="ac-title">
-          <strong>{session.worktree ?? session.project}</strong>
-          <span>
-            {AGENT_NAMES[session.agent]}
-            {session.worktree ? ` · ${session.project}` : ''}
-            {session.parentSessionId ? ` · ${t('list.intern')}` : ''}
-          </span>
-        </div>
-        <span className="ac-state">{t(`state.${session.state}`)}</span>
+        <span className="ac-agent">
+          <img src={AGENT_ICONS[session.agent]} alt="" width={16} height={16} />
+          {AGENT_NAMES[session.agent]}
+        </span>
+        <span className="ac-project" title={session.cwd}>
+          {session.worktree ? `${session.project} · ${session.worktree}` : session.project}
+        </span>
+        <time>{timeLabel(session, now, i18n.language)}</time>
       </header>
-      {session.tool ? (
-        <div className="ac-row">
-          <span>{t('card.doing')}</span>
-          <code>{session.tool}</code>
-        </div>
+      {title ? (
+        <p className="ac-title" title={title}>
+          {title}
+        </p>
       ) : null}
-      {session.detail ? (
-        <div className="ac-row">
-          <span>{t('card.lastReply')}</span>
-          <p>{session.detail}</p>
-        </div>
+      <div className="ac-status">
+        <span className="ac-ind" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </span>
+        <strong>{t(`state.${session.state}`)}</strong>
+        {session.tool ? <code title={session.tool}>{session.tool}</code> : null}
+      </div>
+      {showText && session.prompt ? (
+        <p className="ac-q" title={session.prompt}>
+          {session.prompt}
+        </p>
+      ) : null}
+      {showText && session.detail && !working ? (
+        <p className="ac-r" title={session.detail}>
+          {session.detail}
+        </p>
       ) : null}
       <footer>
-        <span>{t('card.started', { time: formatDuration(now - session.startedAt) })}</span>
-        <span>{t('card.updated', { time: formatDuration(now - session.updatedAt) })}</span>
+        <span className="ac-model">
+          {session.model ?? ''}
+          {intern}
+        </span>
+        {pinned ? <CopyResume session={session} /> : <span className="ac-hint">{t('card.clickToPin')}</span>}
       </footer>
     </div>
   );

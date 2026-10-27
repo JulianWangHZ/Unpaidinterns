@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { runStatusSchema } from './chat.js';
 import { taskSchema } from './task.js';
 
 export const agentKindSchema = z.enum(['claude', 'codex', 'gemini']);
@@ -28,6 +27,13 @@ export const agentEventSchema = z.object({
   state: sessionStateSchema,
   tool: z.string().optional(),
   detail: z.string().optional(),
+  /** Session name: the user's custom title, else the one the CLI generated. */
+  title: z.string().optional(),
+  /** The last thing the person asked in this session. */
+  prompt: z.string().optional(),
+  model: z.string().optional(),
+  /** When the current (or last) turn began, for showing how long it has been running. */
+  turnStartedAt: z.number().int().nonnegative().optional(),
   ts: z.number().int().nonnegative(),
 });
 export type AgentEvent = z.infer<typeof agentEventSchema>;
@@ -43,11 +49,5 @@ export const serverMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('upsert'), session: sessionSchema }),
   z.object({ type: z.literal('remove'), sessionId: z.string().min(1) }),
   z.object({ type: z.literal('tasks'), tasks: z.array(taskSchema) }),
-  z.object({
-    type: z.literal('run'),
-    sessionId: z.string().min(1),
-    status: runStatusSchema,
-    error: z.string().optional(),
-  }),
 ]);
 export type ServerMessage = z.infer<typeof serverMessageSchema>;

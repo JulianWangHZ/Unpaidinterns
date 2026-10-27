@@ -1,6 +1,7 @@
 import { basename } from 'node:path';
 import { projectName, type AgentEvent, type SessionState } from '@unpaidinterns/core';
 import type { LineContext, ParseResult, ParserFactory } from '../types.js';
+import { personPrompt, withMeta, type SessionMeta } from './meta.js';
 import { DETAIL_MAX, toolLabel, truncate } from './text.js';
 
 const WAITING_TOOLS = new Set(['AskUserQuestion', 'ExitPlanMode']);
@@ -112,4 +113,53 @@ export function parseClaudeLine(line: string, ctx: LineContext): ParseResult {
   return { kind: 'event', event };
 }
 
-export const createClaudeParser: ParserFactory = (filePath) => (line) => parseClaudeLine(line, { filePath });
+interface MetaLine {
+  type?: string;
+  aiTitle?: string;
+  customTitle?: string;
+  timestamp?: string;
+  message?: { model?: string; content?: string | ContentBlock[] };
+}
+
+function promptOf(content: string | ContentBlock[] | undefined): string | null {
+  if (typeof content === 'string') return personPrompt(content);
+  if (!Array.isArray(content) || content.some((block) => block.type === 'tool_result')) return null;
+  return personPrompt(content.filter((b) => b.type === 'text').map((b) => b.text ?? '').join('\n'));
+}
+
+/**
+ * One parser per session file. It remembers the session's title, last prompt, model and turn start,
+ * attaches them to every event, and re-emits the latest state when a title line arrives on its own.
+ */
+export const createClaudeParser: ParserFactory = (filePath) => {
+  let meta: SessionMeta = {};
+  let customTitle = false;
+  let last: AgentEvent | null = null;
+
+  return (line) => {
+    let raw: MetaLine | null = null;
+    try {
+      raw = JSON.parse(line) as MetaLine;
+    } catch {
+      // Malformed lines are reported by parseClaudeLine below.
+    }
+    if (raw?.type === 'custom-title' || raw?.type === 'ai-title') {
+      const title = raw.type === 'custom-title' ? raw.customTitle : raw.aiTitle;
+      if (title && (raw.type === 'custom-title' || !customTitle)) {
+        customTitle ||= raw.type === 'custom-title';
+        meta = { ...meta, title: truncate(title, 120) };
+      }
+      return last ? { kind: 'event', event: (last = withMeta(last, meta)) } : SKIP;
+    }
+    if (raw?.type === 'assistant' && raw.message?.model) meta = { ...meta, model: raw.message.model };
+    if (raw?.type === 'user') {
+      const prompt = promptOf(raw.message?.content);
+      const ts = Date.parse(raw.timestamp ?? '');
+      if (prompt) meta = { ...meta, prompt, ...(Number.isNaN(ts) ? {} : { turnStartedAt: ts }) };
+    }
+    const result = parseClaudeLine(line, { filePath });
+    if (result.kind !== 'event') return result;
+    last = withMeta(result.event, meta);
+    return { kind: 'event', event: last };
+  };
+};

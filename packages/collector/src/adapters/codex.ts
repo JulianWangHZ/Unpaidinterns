@@ -1,6 +1,7 @@
 import { basename } from 'node:path';
 import { projectName, type AgentEvent, type SessionState } from '@unpaidinterns/core';
 import type { ParseResult, ParserFactory } from '../types.js';
+import { personPrompt, withMeta, type SessionMeta } from './meta.js';
 import { DETAIL_MAX, toolLabel, truncate } from './text.js';
 
 const SKIP: ParseResult = { kind: 'skip' };
@@ -69,6 +70,7 @@ export const createCodexParser: ParserFactory = (filePath) => {
   let context: FileContext = {
     sessionId: SESSION_ID_IN_NAME.exec(filePath)?.[1] ?? basename(filePath, '.jsonl'),
   };
+  let meta: SessionMeta = {};
 
   return (line) => {
     if (line.trim() === '') return SKIP;
@@ -79,6 +81,14 @@ export const createCodexParser: ParserFactory = (filePath) => {
       return { kind: 'error', reason: 'invalid JSON' };
     }
     const payload = raw.payload ?? {};
+    const lineTs = Date.parse(raw.timestamp ?? '');
+    if (raw.type === 'turn_context' && str(payload.model)) meta = { ...meta, model: str(payload.model) };
+    if (raw.type === 'event_msg' && payload.type === 'task_started' && !Number.isNaN(lineTs)) meta = { ...meta, turnStartedAt: lineTs };
+    if (raw.type === 'response_item' && payload.type === 'message' && payload.role === 'user') {
+      const blocks = Array.isArray(payload.content) ? (payload.content as Array<{ text?: string }>) : [];
+      const prompt = personPrompt(blocks.map((b) => b.text ?? '').join('\n'));
+      if (prompt) meta = { ...meta, prompt };
+    }
     if (raw.type === 'session_meta' || raw.type === 'turn_context') {
       context = {
         sessionId: (raw.type === 'session_meta' && str(payload.id)) || context.sessionId,
@@ -101,6 +111,6 @@ export const createCodexParser: ParserFactory = (filePath) => {
       ...part,
       ts,
     };
-    return { kind: 'event', event };
+    return { kind: 'event', event: withMeta(event, meta) };
   };
 };

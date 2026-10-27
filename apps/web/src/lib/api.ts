@@ -1,4 +1,4 @@
-import type { ChatMessage, SendMessage, Task, TaskCreate, TaskPatch } from '@unpaidinterns/core';
+import type { Task, TaskCreate, TaskPatch } from '@unpaidinterns/core';
 
 type Fetcher = (url: string, init?: RequestInit) => Promise<Response>;
 
@@ -22,10 +22,6 @@ export function createApi(fetcher: Fetcher = (url, init) => fetch(url, init)) {
     patchTask: async (id: string, patch: TaskPatch) =>
       (await request<{ task: Task }>(fetcher, taskUrl(id), { method: 'PATCH', body: JSON.stringify(patch) })).task,
     deleteTask: (id: string) => request<void>(fetcher, taskUrl(id), { method: 'DELETE' }),
-    messages: async (sessionId: string) =>
-      (await request<{ messages: ChatMessage[] }>(fetcher, `/api/sessions/${encodeURIComponent(sessionId)}/messages`)).messages,
-    send: (sessionId: string, body: SendMessage) =>
-      request<{ ok: true }>(fetcher, `/api/sessions/${encodeURIComponent(sessionId)}/messages`, { method: 'POST', body: JSON.stringify(body) }),
   };
 }
 

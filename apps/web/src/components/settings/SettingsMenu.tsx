@@ -50,8 +50,8 @@ export function SettingsMenu() {
       >
         <GearIcon />
       </button>
-      {open ? (
-        <div className="settings-pop" role="dialog" aria-label={t('settings.title')}>
+      {/* Always mounted so opening and closing are CSS transitions that can reverse mid-way. */}
+      <div className="settings-pop" role="dialog" aria-label={t('settings.title')} data-open={open || undefined} aria-hidden={!open} inert={!open}>
           <section>
             <h3>{t('scene.label')}</h3>
             <div className="seg full" role="radiogroup" aria-label={t('scene.label')}>
@@ -106,7 +106,6 @@ export function SettingsMenu() {
             {pipAvailable ? null : <p className="hint">{t('settings.pipUnsupported')}</p>}
           </section>
         </div>
-      ) : null}
     </div>
   );
 }

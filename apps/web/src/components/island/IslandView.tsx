@@ -4,13 +4,14 @@ import { placeAgents, seatIndexes } from '../../lib/island/behavior.js';
 import { SCENES } from '../../lib/scenes/index.js';
 import { useSceneManifest } from '../../lib/scenes/use-manifest.js';
 import { useSessionStore } from '../../store.js';
-import { ChatPanel } from '../chat/ChatPanel.js';
 import { SessionList } from '../SessionList.js';
 import type { Route } from '../../lib/route.js';
 import { useSettingsStore, visibleSessions } from '../../lib/settings.js';
+import { useCompact } from '../compact.js';
 import { ViewBar } from '../ViewBar.js';
 import { readSavedScene, useIslandStore } from './island-store.js';
 import { IslandScene } from './IslandScene.js';
+import { SessionTip } from './SessionTip.js';
 
 const CLOCK_MS = 15_000;
 
@@ -44,6 +45,7 @@ function hasWebGl(): boolean {
 }
 
 export default function IslandView({ route }: { route: Route }) {
+  const compact = useCompact();
   const { t } = useTranslation();
   const sessionMap = useSessionStore((state) => state.sessions);
   const sceneId = useIslandStore((state) => state.scene);
@@ -57,6 +59,11 @@ export default function IslandView({ route }: { route: Route }) {
 
   useEffect(() => {
     useIslandStore.getState().setScene(readSavedScene(localStorage));
+    const unpin = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') useIslandStore.getState().select(null);
+    };
+    window.addEventListener('keydown', unpin);
+    return () => window.removeEventListener('keydown', unpin);
   }, []);
 
   const hiddenAgents = useSettingsStore((state) => state.hiddenAgents);
@@ -87,6 +94,7 @@ export default function IslandView({ route }: { route: Route }) {
           seats={seats}
           reducedMotion={reducedMotion}
         />
+        {compact ? null : (
         <ViewBar route={route} className="stage-bar">
           {selected ? (
             <button type="button" className="chip overview" onClick={() => select(null)}>
@@ -94,9 +102,10 @@ export default function IslandView({ route }: { route: Route }) {
             </button>
           ) : null}
         </ViewBar>
+        )}
         {sessions.length === 0 ? <p className="island-empty">{t('island.empty')}</p> : null}
+        <SessionTip sessions={sessions} />
       </div>
-      <ChatPanel sessions={sessions} />
     </div>
   );
 }

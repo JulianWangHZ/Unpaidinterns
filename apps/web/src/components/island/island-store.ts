@@ -12,16 +12,20 @@ interface IslandStore {
   scene: SceneId;
   selectedSession: string | null;
   hoveredSession: string | null;
+  /** Screen point the session card is placed next to: the pointer while hovering, the click once pinned. */
+  tipAt: { x: number; y: number } | null;
   setScene(scene: SceneId): void;
-  select(sessionId: string | null): void;
-  hover(sessionId: string | null): void;
+  select(sessionId: string | null, at?: { x: number; y: number }): void;
+  hover(sessionId: string | null, at?: { x: number; y: number }): void;
 }
 
 export const useIslandStore = create<IslandStore>()((set) => ({
   scene: 'office',
   selectedSession: null,
   hoveredSession: null,
+  tipAt: null,
   setScene: (scene) => set({ scene }),
-  select: (sessionId) => set({ selectedSession: sessionId }),
-  hover: (sessionId) => set({ hoveredSession: sessionId }),
+  select: (sessionId, at) => set((state) => ({ selectedSession: sessionId, tipAt: at ?? state.tipAt })),
+  // While a card is pinned, hovering others does not move it.
+  hover: (sessionId, at) => set((state) => ({ hoveredSession: sessionId, tipAt: state.selectedSession || !at ? state.tipAt : at })),
 }));

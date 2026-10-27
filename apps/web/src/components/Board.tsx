@@ -19,6 +19,7 @@ import { columnsOf, idsOf, moveId, placeTask, type ColumnIds } from '../lib/orde
 import { useSessionStore } from '../store.js';
 import { AddTask } from './AddTask.js';
 import { Column } from './Column.js';
+import { useCompact } from './compact.js';
 import { ViewBar } from './ViewBar.js';
 
 const isColumn = (id: string): id is TaskColumn => (TASK_COLUMNS as readonly string[]).includes(id);
@@ -28,6 +29,7 @@ function columnOf(ids: ColumnIds, id: string): TaskColumn | undefined {
 }
 
 export function Board({ route, onEdit }: { route: Route; onEdit(id: string): void }) {
+  const compact = useCompact();
   const { t } = useTranslation();
   const tasks = useSessionStore((state) => state.tasks);
   const sessions = useSessionStore((state) => state.sessions);
@@ -98,7 +100,7 @@ export function Board({ route, onEdit }: { route: Route; onEdit(id: string): voi
 
   return (
     <>
-      <ViewBar route={route} />
+      {compact ? null : <ViewBar route={route} />}
       {error ? (
         <p className="error-banner" role="alert">
           {error}
@@ -112,7 +114,7 @@ export function Board({ route, onEdit }: { route: Route; onEdit(id: string): voi
         onDragEnd={onDragEnd}
         onDragCancel={() => setPreview(null)}
       >
-        <div className="board">
+        <div className="board" data-compact={compact || undefined}>
           {TASK_COLUMNS.map((column) => (
             <Column
               key={column}
@@ -120,7 +122,7 @@ export function Board({ route, onEdit }: { route: Route; onEdit(id: string): voi
               tasks={columnTasks(column)}
               onEdit={onEdit}
               onMoveToDone={moveToDone}
-              footer={column === 'todo' ? <AddTask onCreate={create} /> : undefined}
+              footer={column === 'todo' && !compact ? <AddTask onCreate={create} /> : undefined}
             />
           ))}
         </div>

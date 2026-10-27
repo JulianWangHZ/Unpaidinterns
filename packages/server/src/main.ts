@@ -11,7 +11,6 @@ import { createApp } from './app.js';
 import { startDemo } from './demo.js';
 import { SessionHub } from './session-hub.js';
 import { JsonTaskRepository } from './task-repository.js';
-import { Runner } from './runner.js';
 
 const IDLE_MS = 30 * 60 * 1000;
 const SWEEP_MS = 60 * 1000;
@@ -44,12 +43,7 @@ function main(): void {
   const tasks = new JsonTaskRepository(join(dataDir, 'tasks.json'), {
     onCorrupt: (backup) => console.warn(`tasks.json was unreadable. It was moved to ${backup} and a new list was started.`),
   });
-  const files = new Map<string, string>();
-  const runner = new Runner({
-    binaries: { claude: process.env.UNPAIDINTERNS_CLAUDE_BIN, codex: process.env.UNPAIDINTERNS_CODEX_BIN },
-    onStatus: (sessionId, status, error) => hub.broadcast({ type: 'run', sessionId, status, ...(error ? { error } : {}) }),
-  });
-  const { app, injectWebSocket } = createApp({ hub, tasks, chat: { files, runner }, linkToken, sessionSecret });
+  const { app, injectWebSocket } = createApp({ hub, tasks, linkToken, sessionSecret });
   const webDist = fileURLToPath(new URL('../../../apps/web/dist', import.meta.url));
   app.use('/*', serveStatic({ root: relative(process.cwd(), webDist) }));
 
@@ -67,10 +61,7 @@ function main(): void {
     startCollector({
       sources,
       maxFileAgeMs: IDLE_MS,
-      onEvent: (event, { filePath }) => {
-        files.set(event.sessionId, filePath);
-        hub.publish(event);
-      },
+      onEvent: (event) => hub.publish(event),
       onParseError: ({ filePath, reason }) => {
         const count = (parseErrors.get(filePath) ?? 0) + 1;
         parseErrors.set(filePath, count);

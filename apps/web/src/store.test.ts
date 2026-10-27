@@ -71,16 +71,3 @@ describe('useSessionStore', () => {
   });
 });
 
-describe('run messages', () => {
-  it('tracks the latest run per session', () => {
-    const { apply } = useSessionStore.getState();
-    apply({ type: 'run', sessionId: 's1', status: 'running' });
-    apply({ type: 'run', sessionId: 's1', status: 'failed', error: 'boom' });
-    expect(useSessionStore.getState().runs.s1).toEqual({ status: 'failed', error: 'boom' });
-  });
-
-  it('leaves sessions alone on a run message', () => {
-    const sessions = { s1 };
-    expect(reduceMessage(sessions, { type: 'run', sessionId: 's1', status: 'done' })).toBe(sessions);
-  });
-});

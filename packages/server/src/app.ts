@@ -6,19 +6,17 @@ import { createLinkAuth, tokensMatch } from './auth.js';
 import type { SessionHub } from './session-hub.js';
 import type { TaskRepository } from './task-repository.js';
 import { taskRoutes } from './task-routes.js';
-import { chatRoutes, type ChatDeps } from './chat-routes.js';
 
 export const AUTH_COOKIE = 'ui_session';
 
 export interface AppOptions {
   hub: SessionHub;
   tasks?: TaskRepository;
-  chat?: ChatDeps;
   linkToken: string;
   sessionSecret: string;
 }
 
-export function createApp({ hub, tasks, chat, linkToken, sessionSecret }: AppOptions) {
+export function createApp({ hub, tasks, linkToken, sessionSecret }: AppOptions) {
   const app = new Hono();
   const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
   const linkAuth = createLinkAuth(linkToken);
@@ -54,7 +52,6 @@ export function createApp({ hub, tasks, chat, linkToken, sessionSecret }: AppOpt
 
   app.get('/api/sessions', requireSession, (c) => c.json({ sessions: hub.sessions() }));
   if (tasks) app.route('/api/tasks', taskRoutes(tasks, requireSession, (message) => hub.broadcast(message)));
-  if (chat) app.route('/api/sessions', chatRoutes(hub, chat, requireSession));
 
   app.get(
     '/ws',

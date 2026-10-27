@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test';
 
-const chats = (page: import('@playwright/test').Page) => page.getByRole('complementary', { name: 'Chats' });
-
-test('renders the office with a chat list of every agent', async ({ page }) => {
+test('renders the office with the agent counts in the top bar', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('.island-stage canvas')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Office' })).toHaveAttribute('aria-current', 'page');
-  await expect(chats(page).locator('.contact')).toHaveCount(5);
+  await expect(page.getByRole('tab', { name: 'Office' })).toHaveAttribute('aria-selected', 'true');
+  const summary = page.getByLabel('Agent status');
+  await expect(summary).toContainText('Needs you');
+  await expect(summary).toContainText('Working');
+  await expect(summary).toContainText('Done');
 });
 
 test('tags every office agent with its product icon and highlights the one that needs the user', async ({ page }) => {
@@ -20,23 +21,16 @@ test('tags every office agent with its product icon and highlights the one that 
 test('switches scenes and hides agents from the settings menu', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Settings' }).click();
+  // Office shows a name tag per agent, so hiding Codex removes one.
+  await page.getByRole('switch', { name: 'Codex' }).click();
+  await expect(page.locator('.nametag')).toHaveCount(4);
+  await page.getByRole('switch', { name: 'Codex' }).click();
+  await expect(page.locator('.nametag')).toHaveCount(5);
   await page.getByRole('radio', { name: 'Pool' }).click();
   await expect(page.getByRole('radio', { name: 'Pool' })).toHaveAttribute('aria-checked', 'true');
-  await page.getByRole('switch', { name: 'Codex' }).click();
-  await expect(chats(page).locator('.contact')).toHaveCount(4);
-  await page.getByRole('switch', { name: 'Codex' }).click();
   await page.getByRole('radio', { name: 'Office' }).click();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog', { name: 'Settings' })).toBeHidden();
-});
-
-test('opens a conversation from the list and goes back', async ({ page }) => {
-  await page.goto('/');
-  await chats(page).locator('.contact', { hasText: 'docs-site' }).click();
-  await expect(chats(page).locator('.conv-title')).toContainText('docs-site');
-  await expect(chats(page).getByRole('textbox')).toBeVisible();
-  await chats(page).getByRole('button', { name: 'Back to all chats' }).click();
-  await expect(chats(page).locator('.contact')).toHaveCount(5);
 });
 
 test('serves an empty model manifest for every scene', async ({ request }) => {

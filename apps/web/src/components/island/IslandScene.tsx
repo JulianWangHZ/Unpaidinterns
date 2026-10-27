@@ -14,6 +14,7 @@ import { CameraRig } from './CameraRig.js';
 import { Character } from './Character.js';
 import { Booth, Desk } from './Desk.js';
 import { Environment } from './Environments.js';
+import { FitToWindow } from './FitToWindow.js';
 import { useIslandStore } from './island-store.js';
 import { OfficeLabels } from './office/OfficeLabels.js';
 import { PulseRing } from './PulseRing.js';
@@ -108,17 +109,24 @@ function Lights({ night }: { night: boolean }) {
 }
 
 export function IslandScene({ scene, manifest, sessions, placements, seats, reducedMotion, htmlPortal }: SceneProps) {
-  const selected = useIslandStore((state) => state.selectedSession);
   const spots = useMemo(() => spotsFor(scene, sessions, placements, seats), [scene, sessions, placements, seats]);
-  const focus: Vec3 | null = (selected && spots.get(selected)?.position) || null;
+  // The camera stays put while a card is pinned, so the card keeps pointing at its character.
+  const focus: Vec3 | null = null;
   const night = scene.lighting === 'night';
   const [skyTop, skyBottom] = SKIES[scene.id];
 
   return (
-    <Canvas flat shadows="percentage" camera={{ position: [0, 7, 33], fov: 26, far: 700 }} dpr={[1, 2]}>
+    <Canvas
+      flat
+      shadows="percentage"
+      camera={{ position: [0, 7, 33], fov: 26, far: 700 }}
+      dpr={[1, 2]}
+      onPointerMissed={() => useIslandStore.getState().select(null)}
+    >
       <primitive attach="background" object={skyTexture(skyTop, skyBottom)} />
       <fog attach="fog" args={[skyBottom, night ? 60 : 70, night ? 200 : 230]} />
       {/* Keyed so switching scenes rebuilds the lights; R3F does not reset props that are dropped. */}
+      <FitToWindow />
       <Lights key={scene.lighting} night={night} />
       <Backdrop scene={scene.id} />
       <Environment scene={scene} seatCount={seats.size} />

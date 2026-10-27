@@ -45,17 +45,3 @@ describe('createApi', () => {
   });
 });
 
-describe('chat api', () => {
-  it('reads a transcript', async () => {
-    const { calls, fetcher } = fakeFetch(200, { messages: [{ id: 'm', role: 'user', text: 'hi', ts: 1 }] });
-    expect(await createApi(fetcher).messages('a/b')).toHaveLength(1);
-    expect(calls[0]?.url).toBe('/api/sessions/a%2Fb/messages');
-  });
-
-  it('posts a message', async () => {
-    const { calls, fetcher } = fakeFetch(202, { ok: true });
-    await createApi(fetcher).send('s1', { text: 'go', permission: 'readOnly' });
-    expect(calls[0]?.init?.method).toBe('POST');
-    expect(calls[0]?.init?.body).toBe('{"text":"go","permission":"readOnly"}');
-  });
-});

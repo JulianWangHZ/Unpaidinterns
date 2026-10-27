@@ -48,6 +48,7 @@ describe('createCodexParser', () => {
       cwd: '/work/api-server',
       project: 'api-server',
       state: 'thinking',
+      turnStartedAt: TS,
       ts: TS,
     });
   });

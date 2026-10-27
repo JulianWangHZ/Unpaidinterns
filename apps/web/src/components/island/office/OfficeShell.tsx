@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { BUILDING, FLOOR_HEIGHT, FLOORS, ROOMS, STAIR_OPENING, type Room } from '../../../lib/scenes/office.js';
+import { BUILDING, FLOOR_HEIGHT, FLOOR_TAG, FLOORS, ROOMS, STAIR_OPENING, type Room } from '../../../lib/scenes/office.js';
 import { slabAround } from '../../../lib/scenes/slab.js';
 import { cityViewTexture, nightFacade } from '../textures.js';
 import { FRAME, ROOM_ACCENT, WALL, WALL_LOW, WOOD } from './palette.js';
@@ -30,13 +30,17 @@ function Slab({ y, floor, accentRooms }: { y: number; floor: number; accentRooms
           <meshStandardMaterial color={WOOD} roughness={0.85} />
         </mesh>
       ))}
-      {/* Thin light strip along each room's front edge, in the room's accent colour. */}
-      {accentRooms.map((room) => (
-        <mesh key={room.id} position={[(room.left + room.right) / 2, y - SLAB + 0.05, BUILDING.front + 0.01]}>
-          <boxGeometry args={[room.right - room.left - 0.2, 0.05, 0.02]} />
-          <meshBasicMaterial color={ROOM_ACCENT[room.id]} />
-        </mesh>
-      ))}
+      {/* Light strip along each room's front edge, starting where the floor tag ends so they never overlap. */}
+      {accentRooms.map((room) => {
+        const start = room.left + FLOOR_TAG.inset + FLOOR_TAG.width + 0.1;
+        const end = room.right - 0.1;
+        return (
+          <mesh key={room.id} position={[(start + end) / 2, y - SLAB + 0.05, BUILDING.front + 0.01]}>
+            <boxGeometry args={[end - start, 0.05, 0.02]} />
+            <meshBasicMaterial color={ROOM_ACCENT[room.id]} />
+          </mesh>
+        );
+      })}
     </group>
   );
 }
