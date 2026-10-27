@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { Vector3 } from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { Vec3 } from '../../lib/scenes/types.js';
+import { useIslandStore } from './island-store.js';
 
 interface CameraRigProps {
   focus: Vec3 | null;
@@ -13,17 +14,19 @@ interface CameraRigProps {
   reducedMotion: boolean;
 }
 
-/** Orbit controls plus a short glide to the selected agent or back to the scene overview. */
+/** Orbit controls plus a short glide back to the scene overview when asked. */
 export function CameraRig({ focus, overviewTarget, overviewOffset, closeOffset, reducedMotion }: CameraRigProps) {
   const controls = useRef<OrbitControlsImpl>(null);
   const { camera } = useThree();
   const goal = useRef<{ target: Vector3; position: Vector3 } | null>(null);
+  const overviewRequest = useIslandStore((state) => state.overviewRequest);
 
   useEffect(() => {
     const target = new Vector3(...(focus ?? overviewTarget));
     const offset = new Vector3(...(focus ? closeOffset : overviewOffset));
     goal.current = { target, position: target.clone().add(offset) };
-  }, [focus, overviewTarget, overviewOffset, closeOffset]);
+    // overviewRequest re-runs this when the Overview button asks for the starting view again.
+  }, [focus, overviewTarget, overviewOffset, closeOffset, overviewRequest]);
 
   useFrame((_, delta) => {
     const orbit = controls.current;
@@ -46,8 +49,10 @@ export function CameraRig({ focus, overviewTarget, overviewOffset, closeOffset, 
       maxPolarAngle={1.6}
       minDistance={3}
       maxDistance={70}
+      // Only user input fires onStart, so the glide back to the overview never counts as a move.
       onStart={() => {
         goal.current = null;
+        useIslandStore.getState().setCameraMoved(true);
       }}
     />
   );

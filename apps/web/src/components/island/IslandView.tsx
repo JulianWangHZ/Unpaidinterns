@@ -49,8 +49,8 @@ export default function IslandView({ route, active = true }: { route: Route; act
   const { t } = useTranslation();
   const sessionMap = useSessionStore((state) => state.sessions);
   const sceneId = useIslandStore((state) => state.scene);
-  const selected = useIslandStore((state) => state.selectedSession);
-  const select = useIslandStore((state) => state.select);
+  const cameraMoved = useIslandStore((state) => state.cameraMoved);
+  const resetView = useIslandStore((state) => state.resetView);
   const now = useNow();
   const reducedMotion = useReducedMotion();
   const [webGl] = useState(hasWebGl);
@@ -97,8 +97,8 @@ export default function IslandView({ route, active = true }: { route: Route; act
         />
         {compact ? null : (
         <ViewBar route={route} className="stage-bar">
-          {selected ? (
-            <button type="button" className="chip overview" onClick={() => select(null)}>
+          {cameraMoved ? (
+            <button type="button" className="chip overview" onClick={resetView}>
               {t('island.overview')}
             </button>
           ) : null}
