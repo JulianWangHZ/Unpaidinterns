@@ -1,6 +1,6 @@
 {
   "nav": {
-    "island": "辦公室",
+    "island": "我的實習生",
     "board": "看板",
     "label": "檢視"
   },
@@ -9,7 +9,7 @@
   },
   "board": {
     "empty": {
-      "needsYou": "目前沒有人在等你",
+      "needsYou": "目前沒有待釐清的事項",
       "working": "目前沒有 agent 在工作",
       "done": "還沒有完成的工作"
     }
@@ -33,7 +33,7 @@
     "needsYou": "等你回覆",
     "working": "工作中",
     "resting": "休息中",
-    "intern": "實習生",
+    "intern": "小幫手",
     "empty": "目前沒有進行中的 session。在任何專案啟動 Claude Code 或 Codex 就會出現在這裡。"
   },
   "island": {
@@ -86,7 +86,7 @@
   },
   "summary": {
     "label": "Agent 狀態",
-    "needsYou": "需要你",
+    "needsYou": "待釐清",
     "working": "工作中",
     "done": "已完成"
   }

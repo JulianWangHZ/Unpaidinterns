@@ -5,6 +5,11 @@ export interface Rect {
   z2: number;
 }
 
+/** Splits a floor rectangle into pieces that leave every hole open. */
+export function slabAroundAll(full: Rect, holes: readonly Rect[]): Rect[] {
+  return holes.reduce<Rect[]>((pieces, hole) => pieces.flatMap((piece) => slabAround(piece, hole)), [full]);
+}
+
 /** Splits a floor rectangle into up to four pieces that surround a hole, so the hole is truly open. */
 export function slabAround(full: Rect, hole: Rect | null): Rect[] {
   if (!hole) return [full];

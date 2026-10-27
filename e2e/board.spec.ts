@@ -23,9 +23,9 @@ test('switches language and remembers it', async ({ page }) => {
   await page.goto('/#/board');
   await page.getByRole('button', { name: 'Settings' }).click();
   await page.getByRole('radio', { name: '中文' }).click();
-  await expect(page.getByRole('heading', { name: /需要你/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /待釐清/ })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('heading', { name: /需要你/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /待釐清/ })).toBeVisible();
   await page.getByRole('button', { name: '設定' }).click();
   await page.getByRole('radio', { name: 'English' }).click();
   await expect(page.getByRole('heading', { name: /Needs you/ })).toBeVisible();

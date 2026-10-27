@@ -6,6 +6,7 @@ import { DozeCorner } from './furniture/Armchair.js';
 import { BallPit } from './furniture/BallPit.js';
 import { CoffeeBar as Cafe } from './furniture/CoffeeBar.js';
 import { PoolTable } from './furniture/PoolTable.js';
+import { Cabana, DjBooth, GrillStation, HotTub, LoungerPair, LoungerRow, TikiBar } from './pool/Poolside.js';
 import { Bandstand, Carousel as ParkCarousel, FoodStand as ParkFoodStand, GameStall, IceCreamCart, Picnic } from './park/Stalls.js';
 
 type V3 = Vec3;
@@ -147,58 +148,6 @@ function NapPods() {
   );
 }
 
-function FoodStand({ roof }: { roof: string }) {
-  return (
-    <>
-      <Box size={[0.9, 0.55, 0.45]} at={[0, 0.27, -0.3]} color="#fff3c4" />
-      {[-0.4, 0.4].map((x) => (
-        <Box key={x} size={[0.04, 0.5, 0.04]} at={[x, 0.8, -0.1]} color="#c9a27a" />
-      ))}
-      <Box size={[1, 0.08, 0.6]} at={[0, 1.08, -0.25]} color={roof} />
-    </>
-  );
-}
-
-function SunLoungers() {
-  return (
-    <>
-      {[-0.35, 0.35].map((x) => (
-        <group key={x} position={[x, 0, 0]}>
-          <Box size={[0.3, 0.06, 0.8]} at={[0, 0.18, 0]} color="#ffffff" />
-          <mesh position={[0, 0.32, -0.32]} rotation={[0.6, 0, 0]}>
-            <boxGeometry args={[0.3, 0.06, 0.32]} />
-            <meshStandardMaterial color="#ffffff" />
-          </mesh>
-        </group>
-      ))}
-      <Box size={[0.02, 1.2, 0]} at={[0, 0.6, 0]} color="#9aa0c8" round />
-      <mesh position={[0, 1.2, 0]} castShadow>
-        <coneGeometry args={[0.7, 0.3, 12]} />
-        <meshStandardMaterial color="#ff8fab" />
-      </mesh>
-    </>
-  );
-}
-
-function Grill() {
-  return (
-    <>
-      <Box size={[0.6, 0.06, 0.4]} at={[0, 0.5, -0.2]} color="#4a4e7a" />
-      <Box size={[0.6, 0.45, 0.4]} at={[0, 0.25, -0.2]} color="#9aa0c8" />
-      <Box size={[0.9, 0.42, 0.06]} at={[0, 0.21, 0.35]} color="#c9a27a" />
-    </>
-  );
-}
-
-function DivingBoard() {
-  return (
-    <>
-      <Box size={[0.3, 0.6, 0.3]} at={[0, 0.3, -0.3]} color="#d6dbf5" />
-      <Box size={[0.28, 0.05, 1]} at={[0, 0.63, 0.15]} color="#8ec5ff" />
-    </>
-  );
-}
-
 type Props = (props: { night: boolean }) => ReactNode;
 
 const OFFICE: Record<Activity, Props> = {
@@ -231,12 +180,15 @@ const BY_SCENE: Record<SceneId, Record<Activity, Props>> = {
   },
   pool: {
     ...OFFICE,
-    kitchen: Grill,
-    gym: DivingBoard,
-    massage: SunLoungers,
-    sofa: SunLoungers,
-    nap: SunLoungers,
-    ktv: () => <FoodStand roof="#8fd8ff" />,
+    coffee: TikiBar,
+    kitchen: GrillStation,
+    ktv: DjBooth,
+    // The slide is part of the grounds; its riders gather at the foot of the tower stairs.
+    gym: () => null,
+    massage: Cabana,
+    ballpit: HotTub,
+    sofa: LoungerRow,
+    nap: LoungerPair,
   },
 };
 

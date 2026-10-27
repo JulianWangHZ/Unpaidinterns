@@ -113,7 +113,7 @@ describe('riderPose', () => {
   });
 
   it('wraps seats past the ride capacity back onto existing seats', () => {
-    for (const ride of ['carousel', 'coaster', 'wheel', 'drop'] as const) {
+    for (const ride of ['carousel', 'coaster', 'wheel', 'drop', 'slide'] as const) {
       const first = riderPose(ride, 0, 1, [0, 0, 0]).position;
       expect(riderPose(ride, RIDE_SEATS[ride], 1, [0, 0, 0]).position.distanceTo(first)).toBeCloseTo(0);
     }

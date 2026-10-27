@@ -1,5 +1,6 @@
 import { CatmullRomCurve3, Matrix4, Quaternion, Vector3 } from 'three';
 import { COASTER_POINTS, dropTowerHeight, RIDES } from './park-layout.js';
+import { SLIDE, slideRider } from './pool-layout.js';
 import type { Vec3 } from './types.js';
 
 /**
@@ -8,7 +9,7 @@ import type { Vec3 } from './types.js';
  * All of them take the scene clock in seconds.
  */
 
-export type RideId = 'carousel' | 'coaster' | 'wheel' | 'drop';
+export type RideId = 'carousel' | 'coaster' | 'wheel' | 'drop' | 'slide';
 
 export interface RidePose {
   position: Vector3;
@@ -208,6 +209,7 @@ export function riderPose(ride: RideId, seat: number, seconds: number, centre: V
     const horse = horsePose(seat % CAROUSEL.horses, seconds);
     return { position: horse.position.add(origin).add(new Vector3(0, -SIT_DROP, 0)), quaternion: horse.quaternion };
   }
+  if (ride === 'slide') return slideRider(seat % SLIDE.riders, seconds, SIT_DROP);
   if (ride === 'drop') {
     const seatPose = dropSeatPose(seat % DROP.seats, seconds);
     return { position: seatPose.position.add(origin).add(new Vector3(0, -SIT_DROP, 0)), quaternion: seatPose.quaternion };
@@ -229,4 +231,5 @@ export const RIDE_SEATS: Readonly<Record<RideId, number>> = {
   coaster: COASTER.cars * COASTER.seatsPerCar,
   wheel: WHEEL.cars,
   drop: DROP.seats,
+  slide: SLIDE.riders,
 };

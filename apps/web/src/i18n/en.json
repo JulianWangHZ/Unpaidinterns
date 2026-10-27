@@ -1,6 +1,6 @@
 {
   "nav": {
-    "island": "Office",
+    "island": "My interns",
     "board": "Board",
     "label": "View"
   },
@@ -33,7 +33,7 @@
     "needsYou": "Needs you",
     "working": "Working",
     "resting": "Resting",
-    "intern": "intern",
+    "intern": "helper",
     "empty": "No active sessions. Start Claude Code or Codex in any project and it shows up here."
   },
   "island": {

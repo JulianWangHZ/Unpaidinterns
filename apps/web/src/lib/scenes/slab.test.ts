@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { slabAround, type Rect } from './slab.js';
+import { slabAround, slabAroundAll, type Rect } from './slab.js';
 
 const full: Rect = { x1: -10, x2: 10, z1: -2, z2: 2 };
 const area = (rects: Rect[]) => rects.reduce((sum, r) => sum + (r.x2 - r.x1) * (r.z2 - r.z1), 0);
@@ -28,5 +28,26 @@ describe('slabAround', () => {
 
   it('ignores a hole outside the slab', () => {
     expect(slabAround(full, { x1: 20, x2: 21, z1: 0, z2: 1 })).toEqual([full]);
+  });
+});
+
+describe('slabAroundAll', () => {
+  const full = { x1: 0, x2: 10, z1: 0, z2: 10 };
+  const area = (rects: Array<{ x1: number; x2: number; z1: number; z2: number }>) => rects.reduce((sum, r) => sum + (r.x2 - r.x1) * (r.z2 - r.z1), 0);
+
+  it('leaves two separate holes open and covers the rest exactly', () => {
+    const pieces = slabAroundAll(full, [
+      { x1: 1, x2: 3, z1: 1, z2: 3 },
+      { x1: 6, x2: 9, z1: 5, z2: 8 },
+    ]);
+    expect(area(pieces)).toBeCloseTo(100 - 4 - 9);
+    const covers = (x: number, z: number) => pieces.some((p) => x > p.x1 && x < p.x2 && z > p.z1 && z < p.z2);
+    expect(covers(2, 2)).toBe(false);
+    expect(covers(7, 6)).toBe(false);
+    expect(covers(4.5, 4.5)).toBe(true);
+  });
+
+  it('returns the whole floor when there are no holes', () => {
+    expect(slabAroundAll(full, [])).toEqual([full]);
   });
 });

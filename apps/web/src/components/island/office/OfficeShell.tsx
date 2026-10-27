@@ -206,7 +206,6 @@ function BackFacade({ time }: { time: Time }) {
 
 /** Glass sides, back skin and the roof seen from outside. */
 function Exterior({ time }: { time: Time }) {
-  const height = FLOORS * FLOOR_HEIGHT;
   return (
     <group>
       <GlassSide x={BUILDING.left - 0.06} time={time} />

@@ -1,25 +1,51 @@
-import type { SceneDefinition } from './types.js';
+import { BAR, barStool, CABANA, HOT_TUB, hotTubSeat, laneSpot, LOUNGERS, loungerSpot } from './pool-layout.js';
+import { RIDE_SEATS, SIT_DROP } from './rides.js';
+import type { SceneDefinition, Spot, Vec3 } from './types.js';
 
-const LANES = 6;
+/** A seat relative to its activity centre: the seat surface height minus how far a sitter drops into it. */
+const sit = ([x, y, z]: Vec3, surface: number, facing: number): Spot => ({ position: [x, surface - SIT_DROP + y, z], facing, seated: true });
 
-/** Swimmers hold a lane each across the pool; the deck around it holds the activities. */
+const NAP_AT: Vec3 = [5.0, 0, 7.4];
+const SLIDE_QUEUE: Vec3 = [7.0, 0, -2.0];
+
+/** Working agents swim, one to a lane; resting ones use the bar, hot tub, slide, cabana and loungers. */
 export const pool: SceneDefinition = {
   id: 'pool',
-  seatAt: (index) => ({
-    position: [-6.2 + (index % LANES) * 1.05, -0.15, -1.6 + Math.floor(index / LANES) * 1.6],
-    facing: 0,
-  }),
+  // Swimmers tread water upright, so they are never drawn sitting.
+  seatAt: (index) => ({ position: laneSpot(index), facing: 0, seated: false }),
   activities: {
-    coffee: [3.4, 0, -4.2],
-    kitchen: [6.4, 0, -4.2],
-    ktv: [6.8, 0, -0.6],
-    gym: [6.6, 0, 2.8],
-    massage: [3.6, 0, 4.4],
-    ballpit: [3.2, 0, 1],
-    pingpong: [0.4, 0, 4.6],
-    sofa: [0.4, 0, -3.2],
-    nap: [-0.6, 0, -4.4],
+    coffee: BAR.at,
+    kitchen: [6.0, 0, -3.0],
+    ktv: [3.4, 0, -1.2],
+    gym: SLIDE_QUEUE,
+    massage: CABANA.at,
+    ballpit: HOT_TUB.at,
+    pingpong: [-3.4, 0, -5.4],
+    sofa: LOUNGERS.at,
+    nap: NAP_AT,
   },
+  activitySeats: {
+    // Bar stools face the counter.
+    coffee: Array.from({ length: BAR.stools }, (_, i) => sit(barStool(i), 0.66, Math.PI)),
+    // Sitting on the bench inside the hot tub, chest-deep.
+    ballpit: Array.from({ length: HOT_TUB.seats }, (_, i) => {
+      const seat = hotTubSeat(i);
+      return sit([seat.position[0], 0, seat.position[2]], HOT_TUB.bench, seat.facing);
+    }),
+    // Lying back on the loungers and the cabana daybed, looking out to sea.
+    sofa: Array.from({ length: LOUNGERS.count }, (_, i) => {
+      const [x, , z] = loungerSpot(i);
+      return sit([x - LOUNGERS.at[0], 0, z - LOUNGERS.at[2]], 0.34, 0);
+    }),
+    nap: [-0.6, 0.6].map((dx) => sit([dx, 0, 0], 0.34, 0)),
+    massage: [-0.45, 0.45].map((dx) => sit([dx, 0, 0.1], 0.5, 0)),
+  },
+  rides: {
+    gym: { id: 'slide', seats: RIDE_SEATS.slide, board: 0.8, centre: [0, 0, 0] },
+  },
+  // Anyone past the bar stools waits further out, clear of the counter.
+  activityRadius: { kitchen: 0.9, ktv: 0.9, pingpong: 1.2, gym: 0.6, coffee: 1.1, ballpit: 1.45 },
+  activityPose: { gym: 'lounge', ballpit: 'lounge', sofa: 'lounge', massage: 'lounge', nap: 'nap' },
   outfits: {
     working: { body: null, headwear: 'swimcap', headwearColor: '#ffffff', extra: 'none' },
     needsYou: { body: '#ff5d5d', headwear: 'cap', headwearColor: '#ff5d5d', extra: 'whistle' },
@@ -28,7 +54,7 @@ export const pool: SceneDefinition = {
   },
   characterScale: 1,
   nameTags: false,
-  cameraTarget: [0, 1, 0.4],
+  cameraTarget: [0.8, 0.8, 0.2],
   closeOffset: [4.5, 5.5, 6],
-  cameraOffset: [15, 6, 20],
+  cameraOffset: [20, 13, 27],
 };

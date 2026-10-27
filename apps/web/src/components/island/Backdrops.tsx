@@ -4,6 +4,7 @@ import type { SceneId } from '../../lib/scenes/types.js';
 import { LEVEL } from '../../lib/scenes/street.js';
 import { ParkingLot } from './city/ParkingLot.js';
 import { Street } from './city/Street.js';
+import { Resort } from './pool/Resort.js';
 import { facade, nightFacade } from './textures.js';
 
 const STREET = -60;
@@ -117,41 +118,7 @@ function Countryside({ time }: { time: Time }) {
   );
 }
 
-function Seaside(_props: { time: Time }) {
-  const islands = useMemo(() => {
-    const random = seeded(31);
-    return Array.from({ length: 6 }, () => ({
-      at: [(random() - 0.5) * 140, -1.5, -40 - random() * 50] as [number, number, number],
-      size: 5 + random() * 8,
-    }));
-  }, []);
-  return (
-    <>
-      <mesh position={[0, -1.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[260, 48]} />
-        <meshStandardMaterial color="#58bfe6" roughness={0.2} />
-      </mesh>
-      <mesh position={[0, -1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[11, 16, 48]} />
-        <meshStandardMaterial color="#f3e2c0" />
-      </mesh>
-      {islands.map(({ at, size }, index) => (
-        <mesh key={index} position={at} scale={[size, size * 0.45, size]}>
-          <sphereGeometry args={[1, 14, 10]} />
-          <meshStandardMaterial color="#86c98a" flatShading />
-        </mesh>
-      ))}
-      <mesh position={[-38, -1.6, -78]} scale={[22, 3, 14]}>
-        <sphereGeometry args={[1, 20, 10]} />
-        <meshStandardMaterial color="#f3e2c0" flatShading />
-      </mesh>
-      <Building x={-38} z={-80} width={16} depth={7} top={14} tint="#f7efe3" />
-      <Clouds seed={13} height={16} spread={200} />
-    </>
-  );
-}
-
-const BACKDROPS: Record<SceneId, (props: { time: Time }) => ReactNode> = { office: City, park: Countryside, pool: Seaside };
+const BACKDROPS: Record<SceneId, (props: { time: Time }) => ReactNode> = { office: City, park: Countryside, pool: Resort };
 
 /** Sky gradient (top, horizon) for each scene at each time of day. */
 export const SKIES: Record<SceneId, Record<Time, [string, string]>> = {
