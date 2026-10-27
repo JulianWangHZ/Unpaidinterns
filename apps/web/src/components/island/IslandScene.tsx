@@ -137,7 +137,7 @@ export function IslandScene({ scene, manifest, sessions, placements, seats, redu
       <Environment scene={scene} seatCount={seats.size} time={time} />
       {night ? null : <ContactShadows position={[0, 0.005, 0]} scale={30} blur={2} opacity={0.18} far={2} />}
       {ACTIVITIES.map((activity) => (
-        <ActivityProps key={activity} scene={scene.id} activity={activity} position={scene.activities[activity]} />
+        <ActivityProps key={activity} scene={scene.id} activity={activity} position={scene.activities[activity]} night={night} />
       ))}
       <Workstations scene={scene} sessions={sessions} placements={placements} seats={seats} />
       {scene.id === 'office' ? <OfficeLabels sessions={sessions} /> : null}

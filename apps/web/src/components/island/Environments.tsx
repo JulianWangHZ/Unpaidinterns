@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { SceneDefinition, SceneId } from '../../lib/scenes/types.js';
 import { OfficeDecor } from './office/OfficeDecor.js';
 import { OfficeShell } from './office/OfficeShell.js';
+import { ParkGrounds } from './park/ParkGrounds.js';
 
 interface EnvironmentProps {
   scene: SceneDefinition;
@@ -12,7 +13,6 @@ interface EnvironmentProps {
 function deepestSeat(scene: SceneDefinition, seatCount: number): number {
   return Math.max(0, ...Array.from({ length: Math.max(1, seatCount) }, (_, i) => scene.seatAt(i, 'claude', i).position[2]));
 }
-
 
 function Tree({ at, scale = 1 }: { at: [number, number, number]; scale?: number }) {
   return (
@@ -35,46 +35,6 @@ function OfficeTower({ time }: EnvironmentProps) {
     <group>
       <OfficeShell time={time} />
       <OfficeDecor />
-    </group>
-  );
-}
-
-function ParkGrounds({ scene, seatCount }: EnvironmentProps) {
-  const reach = Math.max(10, deepestSeat(scene, seatCount) + 3);
-  return (
-    <group>
-      <mesh position={[0, -0.1, 0]} receiveShadow>
-        <cylinderGeometry args={[reach + 2, reach + 2.2, 0.2, 48]} />
-        <meshStandardMaterial color="#bfe7b0" roughness={1} />
-      </mesh>
-      <mesh position={[1, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <ringGeometry args={[3.6, 4.6, 48]} />
-        <meshStandardMaterial color="#f6e3c8" />
-      </mesh>
-      <group position={[1, 0, -7.5]}>
-        <mesh position={[0, 3.2, 0]}>
-          <torusGeometry args={[2.6, 0.08, 8, 48]} />
-          <meshStandardMaterial color="#ff8fab" />
-        </mesh>
-        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
-          const a = (i / 8) * Math.PI * 2;
-          return (
-            <mesh key={i} position={[Math.cos(a) * 2.6, 3.2 + Math.sin(a) * 2.6, 0]} castShadow>
-              <boxGeometry args={[0.4, 0.35, 0.4]} />
-              <meshStandardMaterial color={['#8ec5ff', '#ffe08a', '#b8e0c8', '#c9b8f5'][i % 4]} />
-            </mesh>
-          );
-        })}
-        {[-1, 1].map((side) => (
-          <mesh key={side} position={[side * 0.9, 1.6, 0]} rotation={[0, 0, side * 0.3]} castShadow>
-            <boxGeometry args={[0.12, 3.4, 0.12]} />
-            <meshStandardMaterial color="#9aa0c8" />
-          </mesh>
-        ))}
-      </group>
-      {[[-9, 0, -6], [9, 0, -6], [-10, 0, 4], [10, 0, 5], [8, 0, 8], [-6, 0, 9]].map((at) => (
-        <Tree key={at.join()} at={at as [number, number, number]} scale={1.3} />
-      ))}
     </group>
   );
 }

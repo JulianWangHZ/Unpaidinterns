@@ -1,5 +1,6 @@
 import type { AgentKind, StateGroup } from '@unpaidinterns/core';
 import type { Pose } from '../island/behavior.js';
+import type { RideId } from './rides.js';
 
 export type Vec3 = [number, number, number];
 
@@ -13,6 +14,13 @@ export interface Spot {
   facing: number;
   /** The character sits here (chair, stool, sofa) rather than standing. */
   seated?: boolean;
+  /** Sits astride, legs either side, as on a carousel horse. */
+  astride?: boolean;
+  /**
+   * The character rides a moving seat. `position` is then where it boards; once there it follows
+   * the seat, whose pose comes from the ride's own timing.
+   */
+  ride?: { id: RideId; seat: number; centre: Vec3; board: number };
 }
 
 export type Headwear = 'none' | 'cap' | 'swimcap' | 'mascot';
@@ -42,6 +50,11 @@ export interface SceneDefinition {
   activityRadius?: Readonly<Partial<Record<Activity, number>>>;
   /** Scenes can dress an activity differently, e.g. the office plays arcade games where others work out. */
   activityPose?: Readonly<Partial<Record<Activity, Pose>>>;
+  /**
+   * Activities that are rides: the first `seats` people ride, boarding within `board` of the
+   * activity spot; anyone after them waits around it. `centre` is the ride's own centre.
+   */
+  rides?: Readonly<Partial<Record<Activity, { id: RideId; seats: number; board: number; centre: Vec3 }>>>;
   /** Fixed seats for furniture people sit on in a row, such as a sofa. Extra people stand around it. */
   activitySeats?: Readonly<Partial<Record<Activity, readonly Spot[]>>>;
   outfits: Readonly<Record<StateGroup, Outfit>>;

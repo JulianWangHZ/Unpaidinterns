@@ -139,7 +139,27 @@ describe('spotAtActivity', () => {
   it('falls back to standing around activities without fixed seats', async () => {
     const { park } = await import('./park.js');
     const { spotAtActivity } = await import('./index.js');
-    expect(spotAtActivity(park, 'sofa', 0)).toEqual(activitySeat(park.activities.sofa, 0));
+    expect(spotAtActivity(park, 'coffee', 0)).toEqual(activitySeat(park.activities.coffee, 0, park.activityRadius?.coffee));
+  });
+
+  it('puts the first people at a ride on its seats, and has the rest wait beside it', async () => {
+    const { park } = await import('./park.js');
+    const { spotAtActivity } = await import('./index.js');
+    const ride = park.rides?.sofa;
+    expect(ride?.id).toBe('drop');
+    const rider = spotAtActivity(park, 'sofa', 0);
+    expect(rider.ride).toMatchObject({ id: 'drop', seat: 0 });
+    expect(rider.seated).toBe(true);
+    const waiting = spotAtActivity(park, 'sofa', ride?.seats ?? 0);
+    expect(waiting.ride).toBeUndefined();
+    expect(waiting).toEqual(activitySeat(park.activities.sofa, 0, park.activityRadius?.sofa));
+  });
+
+  it('rides the carousel astride', async () => {
+    const { park } = await import('./park.js');
+    const { spotAtActivity } = await import('./index.js');
+    expect(spotAtActivity(park, 'gym', 2)).toMatchObject({ astride: true, ride: { id: 'carousel', seat: 2 } });
+    expect(spotAtActivity(park, 'ballpit', 0).astride).toBeUndefined();
   });
 });
 

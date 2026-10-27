@@ -6,6 +6,7 @@ import { DozeCorner } from './furniture/Armchair.js';
 import { BallPit } from './furniture/BallPit.js';
 import { CoffeeBar as Cafe } from './furniture/CoffeeBar.js';
 import { PoolTable } from './furniture/PoolTable.js';
+import { Bandstand, Carousel as ParkCarousel, FoodStand as ParkFoodStand, GameStall, IceCreamCart, Picnic } from './park/Stalls.js';
 
 type V3 = Vec3;
 
@@ -85,8 +86,6 @@ function Massage() {
   );
 }
 
-const BALL_COLORS = ['#ff8fab', '#ffe08a', '#8ec5ff', '#b8e0c8', '#c9b8f5'];
-
 function PingPong() {
   return (
     <group>
@@ -148,36 +147,6 @@ function NapPods() {
   );
 }
 
-function Stage() {
-  return (
-    <>
-      <Box size={[1.3, 0.24, 0.9]} at={[0, 0.12, -0.3]} color="#e9e1ff" />
-      {[-0.6, 0.6].map((x) => (
-        <Box key={x} size={[0.08, 1.1, 0.08]} at={[x, 0.79, -0.7]} color="#ff8fc0" />
-      ))}
-      <Box size={[1.3, 0.12, 0.1]} at={[0, 1.36, -0.7]} color="#ff8fc0" />
-      <Box size={[0.02, 0.5, 0]} at={[0, 0.49, -0.2]} color="#4a4e7a" round />
-    </>
-  );
-}
-
-function Carousel() {
-  return (
-    <>
-      <Box size={[0.8, 0.1, 0]} at={[0, 0.05, 0]} color="#ffd6e0" round />
-      <Box size={[0.06, 1.1, 0]} at={[0, 0.55, 0]} color="#ffe08a" round />
-      <mesh position={[0, 1.18, 0]} castShadow>
-        <coneGeometry args={[0.9, 0.4, 12]} />
-        <meshStandardMaterial color="#ff8fab" roughness={0.6} />
-      </mesh>
-      {[0, 1, 2, 3, 4, 5].map((i) => {
-        const a = (i / 6) * Math.PI * 2;
-        return <Box key={i} size={[0.12, 0.18, 0.28]} at={[Math.sin(a) * 0.6, 0.35, Math.cos(a) * 0.6]} color={BALL_COLORS[i % 5] as string} />;
-      })}
-    </>
-  );
-}
-
 function FoodStand({ roof }: { roof: string }) {
   return (
     <>
@@ -186,27 +155,6 @@ function FoodStand({ roof }: { roof: string }) {
         <Box key={x} size={[0.04, 0.5, 0.04]} at={[x, 0.8, -0.1]} color="#c9a27a" />
       ))}
       <Box size={[1, 0.08, 0.6]} at={[0, 1.08, -0.25]} color={roof} />
-    </>
-  );
-}
-
-function Tent() {
-  return (
-    <mesh position={[0, 0.4, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
-      <coneGeometry args={[0.7, 0.8, 4]} />
-      <meshStandardMaterial color="#b8e0c8" roughness={0.8} />
-    </mesh>
-  );
-}
-
-function Bench() {
-  return (
-    <>
-      <Box size={[0.9, 0.06, 0.3]} at={[0, 0.3, 0]} color="#c9a27a" />
-      <Box size={[0.9, 0.3, 0.05]} at={[0, 0.48, -0.14]} color="#c9a27a" />
-      {[-0.38, 0.38].map((x) => (
-        <Box key={x} size={[0.05, 0.3, 0.26]} at={[x, 0.15, 0]} color="#8a5f38" />
-      ))}
     </>
   );
 }
@@ -251,7 +199,7 @@ function DivingBoard() {
   );
 }
 
-type Props = () => ReactNode;
+type Props = (props: { night: boolean }) => ReactNode;
 
 const OFFICE: Record<Activity, Props> = {
   coffee: CoffeeBar,
@@ -270,12 +218,16 @@ const BY_SCENE: Record<SceneId, Record<Activity, Props>> = {
   office: { ...OFFICE, coffee: Cafe, pingpong: PoolTable, gym: () => null, nap: DozeCorner },
   park: {
     ...OFFICE,
-    kitchen: () => <FoodStand roof="#ff8fab" />,
-    ktv: Stage,
-    gym: Carousel,
-    massage: Bench,
-    sofa: Bench,
-    nap: Tent,
+    coffee: IceCreamCart,
+    kitchen: ParkFoodStand,
+    ktv: Bandstand,
+    gym: ParkCarousel,
+    // The coaster, ferris wheel and drop tower are part of the grounds; their gathering spots need no prop.
+    ballpit: () => null,
+    massage: () => null,
+    sofa: () => null,
+    pingpong: GameStall,
+    nap: Picnic,
   },
   pool: {
     ...OFFICE,
@@ -291,11 +243,11 @@ const BY_SCENE: Record<SceneId, Record<Activity, Props>> = {
 /** The office tower is built at a larger scale than the outdoor scenes, so its props are scaled up to match. */
 const PROP_SCALE: Record<SceneId, number> = { office: 1.35, park: 1, pool: 1 };
 
-export function ActivityProps({ scene, activity, position }: { scene: SceneId; activity: Activity; position: Vec3 }) {
+export function ActivityProps({ scene, activity, position, night }: { scene: SceneId; activity: Activity; position: Vec3; night: boolean }) {
   const Props = BY_SCENE[scene][activity];
   return (
     <group position={position} scale={PROP_SCALE[scene]}>
-      <Props />
+      <Props night={night} />
     </group>
   );
 }

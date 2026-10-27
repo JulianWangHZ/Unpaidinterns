@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { Vector3, type Group } from 'three';
 import { AGENT_NAMES } from '../../lib/agents.js';
 import type { Pose } from '../../lib/island/behavior.js';
+import { riderPose } from '../../lib/scenes/rides.js';
 import type { Outfit, Spot } from '../../lib/scenes/types.js';
 import { lookFor } from '../../lib/characters/look.js';
 import { AgentBadge } from './characters/AgentBadge.js';
@@ -55,9 +56,29 @@ export function Character({ session, spot, pose, outfit, model, nameTag, scale, 
   const seated = spot.seated ?? DESK_SEATED.has(pose);
   const height = ((outfit.headwear === 'mascot' ? 1.12 : 1.0) - (seated ? 0.06 : 0)) * scale;
 
-  useFrame((_, delta) => {
+  // Set once a rider has reached the ride; it then follows its seat until it is sent elsewhere.
+  const riding = useRef<string | null>(null);
+
+  useFrame(({ clock }, delta) => {
     const node = group.current;
     if (!node) return;
+    const ride = spot.ride;
+    const rideKey = ride ? `${ride.id}:${ride.seat}` : null;
+    if (riding.current !== rideKey) riding.current = null;
+    if (ride && rideKey) {
+      const boardAt = target.current.set(...spot.position);
+      if (riding.current || reducedMotion || node.position.distanceTo(boardAt) <= ride.board || node.position.distanceTo(boardAt) > 14) {
+        riding.current = rideKey;
+        const seat = riderPose(ride.id, ride.seat, clock.elapsedTime, ride.centre);
+        node.position.copy(seat.position);
+        node.quaternion.copy(seat.quaternion);
+        motion.current.walking = false;
+        return;
+      }
+    }
+    // Off a ride the figure stands upright again; rides can tilt it.
+    node.rotation.x = 0;
+    node.rotation.z = 0;
     target.current.set(...spot.position);
     const offset = target.current.clone().sub(node.position);
     const distance = offset.length();
@@ -78,6 +99,7 @@ export function Character({ session, spot, pose, outfit, model, nameTag, scale, 
       shirt={outfit.body ?? brand}
       pose={pose}
       seated={seated}
+      astride={spot.astride ?? false}
       headwear={outfit.headwear}
       headwearColor={outfit.headwearColor}
       extra={outfit.extra}

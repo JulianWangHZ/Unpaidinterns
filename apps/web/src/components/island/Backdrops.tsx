@@ -85,7 +85,9 @@ function City({ time }: { time: Time }) {
   );
 }
 
-function Countryside(_props: { time: Time }) {
+/** Rolling hills and a far-off town round the park; the hills fall dark and the clouds clear at night. */
+function Countryside({ time }: { time: Time }) {
+  const night = time === 'night';
   const hills = useMemo(() => {
     const random = seeded(21);
     return Array.from({ length: 16 }, (_, i) => {
@@ -99,18 +101,18 @@ function Countryside(_props: { time: Time }) {
     <>
       <mesh position={[0, -0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[220, 48]} />
-        <meshStandardMaterial color="#a8d99a" />
+        <meshStandardMaterial color={night ? '#2f4a40' : '#a8d99a'} />
       </mesh>
       {hills.map(({ at, size }, index) => (
         <mesh key={index} position={at} scale={[size, size * 0.5, size]}>
           <sphereGeometry args={[1, 16, 10]} />
-          <meshStandardMaterial color={index % 2 ? '#8fcf8a' : '#9ad69a'} roughness={1} flatShading />
+          <meshStandardMaterial color={night ? (index % 2 ? '#34503f' : '#3a5846') : index % 2 ? '#8fcf8a' : '#9ad69a'} roughness={1} flatShading />
         </mesh>
       ))}
       {city.map((tower, index) => (
         <Building key={index} {...tower} />
       ))}
-      <Clouds seed={8} height={18} spread={180} />
+      {night ? null : <Clouds seed={8} height={18} spread={180} />}
     </>
   );
 }

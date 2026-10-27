@@ -27,6 +27,17 @@ export function internSpot({ position: [x, y, z], facing }: Spot): Spot {
 /** Where the n-th person at an activity stands: on a fixed seat if the scene has one, otherwise around the spot. */
 export function spotAtActivity(scene: SceneDefinition, activity: Activity, seat: number): Spot {
   const centre = scene.activities[activity];
+  const ride = scene.rides?.[activity];
+  if (ride && seat < ride.seats) {
+    return {
+      position: centre,
+      facing: 0,
+      seated: true,
+      ...(ride.id === 'carousel' ? { astride: true } : {}),
+      ride: { id: ride.id, seat, centre: ride.centre, board: ride.board },
+    };
+  }
+  if (ride) return activitySeat(centre, seat - ride.seats, scene.activityRadius?.[activity] ?? 0.7);
   const fixed = scene.activitySeats?.[activity];
   const own = fixed?.[seat];
   if (own) {

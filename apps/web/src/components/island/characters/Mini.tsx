@@ -17,6 +17,8 @@ export interface MiniProps {
   shirt: string;
   pose: Pose;
   seated: boolean;
+  /** Seated astride, legs hanging either side, as on a carousel horse. */
+  astride?: boolean;
   headwear?: Headwear;
   headwearColor?: string;
   extra?: Extra;
@@ -43,7 +45,7 @@ function reset(rig: Rig) {
 }
 
 /** One frame of a pose. `t` is seconds; poses are short loops so a crowd never looks frozen. */
-function animate(rig: Rig, pose: Pose, t: number, seated: boolean, walking: boolean) {
+function animate(rig: Rig, pose: Pose, t: number, seated: boolean, walking: boolean, astride = false) {
   reset(rig);
   if (walking) {
     const swing = Math.sin(t * 11) * 0.7;
@@ -54,7 +56,12 @@ function animate(rig: Rig, pose: Pose, t: number, seated: boolean, walking: bool
     rig.root.position.y = Math.abs(Math.sin(t * 11)) * 0.03;
     return;
   }
-  if (seated) {
+  if (seated && astride) {
+    // Thighs splay out over the horse's flanks and the shins hang down, so nothing cuts into it.
+    rig.legL.rotation.set(-0.35, 0, -0.75);
+    rig.legR.rotation.set(-0.35, 0, 0.75);
+    rig.body.position.y = -0.06;
+  } else if (seated) {
     rig.legL.rotation.x = -Math.PI / 2;
     rig.legR.rotation.x = -Math.PI / 2;
     rig.body.position.y = -0.06;
@@ -144,7 +151,7 @@ function Limb({ size, colour, hand, look }: { size: [number, number, number]; co
  * A chunky chibi character: big rounded head with a face and hair, boxy torso, stubby arms and legs.
  * About 0.95 units tall with feet at the origin, facing +Z.
  */
-export function Mini({ look, shirt, pose, seated, headwear = 'none', headwearColor = '#ffffff', extra = 'none', opacity = 1, still = false, motion }: MiniProps) {
+export function Mini({ look, shirt, pose, seated, astride = false, headwear = 'none', headwearColor = '#ffffff', extra = 'none', opacity = 1, still = false, motion }: MiniProps) {
   const refs = {
     root: useRef<Group>(null),
     body: useRef<Group>(null),
@@ -160,7 +167,7 @@ export function Mini({ look, shirt, pose, seated, headwear = 'none', headwearCol
     const rig = Object.fromEntries(Object.entries(refs).map(([key, ref]) => [key, ref.current])) as unknown as Rig;
     if (Object.values(rig).some((part) => !part)) return;
     const t = still ? 0 : clock.elapsedTime + seed.current;
-    animate(rig, pose, t, seated, motion?.current.walking ?? false);
+    animate(rig, pose, t, seated, motion?.current.walking ?? false, astride);
   });
 
   const transparent = opacity < 1;
