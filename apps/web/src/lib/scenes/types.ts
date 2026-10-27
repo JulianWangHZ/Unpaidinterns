@@ -45,7 +45,6 @@ export interface SceneDefinition {
   /** Fixed seats for furniture people sit on in a row, such as a sofa. Extra people stand around it. */
   activitySeats?: Readonly<Partial<Record<Activity, readonly Spot[]>>>;
   outfits: Readonly<Record<StateGroup, Outfit>>;
-  lighting: 'day' | 'night';
   /** Characters are scaled up indoors so they read clearly behind desks and monitors. */
   characterScale: number;
   /** Show a name tag over every agent, not only the ones that need attention. */

@@ -11,6 +11,7 @@ import { TaskEditor } from './components/TaskEditor.js';
 import { openPipWindow, pipSupported } from './lib/pip.js';
 import { parseRoute, type Route } from './lib/route.js';
 import { loadHiddenAgents, useSettingsStore } from './lib/settings.js';
+import { loadTheme } from './lib/theme.js';
 import { connectSessions } from './lib/socket.js';
 import { useSessionStore } from './store.js';
 
@@ -29,6 +30,13 @@ function useRoute(): Route {
     return () => window.removeEventListener('hashchange', update);
   }, []);
   return route;
+}
+
+/** True from the first time `open` is true, and stays true. */
+function useOpenedOnce(open: boolean): boolean {
+  const [opened, setOpened] = useState(open);
+  if (open && !opened) setOpened(true);
+  return opened || open;
 }
 
 /** The current view renders into a picture-in-picture window while one is open, and back into the page after. */
@@ -51,22 +59,41 @@ export function App() {
   const route = useRoute();
   const [editing, setEditing] = useState<string | null>(null);
   const { pip, toggle, available } = usePictureInPicture();
+  const theme = useSettingsStore((state) => state.theme);
+
+  // The theme lives on <html>, in this window and in the picture-in-picture window.
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    if (pip) pip.document.documentElement.dataset.theme = theme;
+  }, [theme, pip]);
 
   useEffect(() => {
     useSettingsStore.getState().setHiddenAgents(loadHiddenAgents(localStorage));
+    useSettingsStore.getState().setTheme(loadTheme(localStorage, window.matchMedia('(prefers-color-scheme: dark)').matches));
     const { apply, setStatus } = useSessionStore.getState();
     const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
     return connectSessions({ url: `${scheme}://${window.location.host}/ws`, onMessage: apply, onStatus: setStatus });
   }, []);
 
-  const view =
-    route === 'board' ? (
-      <Board route={route} onEdit={setEditing} />
-    ) : (
-      <Suspense fallback={<p className="empty">{t('island.loading')}</p>}>
-        <IslandView route={route} />
-      </Suspense>
-    );
+  const officeOpened = useOpenedOnce(route === 'island');
+  // The office stays mounted once opened, paused and hidden while the board shows, so switching
+  // back does not rebuild the whole 3D scene.
+  const view = (
+    <>
+      {route === 'board' ? (
+        <div className="view-pane" key="board">
+          <Board route={route} onEdit={setEditing} />
+        </div>
+      ) : null}
+      {officeOpened ? (
+        <div className="view-pane" key="island" hidden={route !== 'island'}>
+          <Suspense fallback={<p className="empty">{t('island.loading')}</p>}>
+            <IslandView route={route} active={route === 'island'} />
+          </Suspense>
+        </div>
+      ) : null}
+    </>
+  );
 
   const pipControls = { available, open: pip !== null, toggle: () => void toggle() };
 

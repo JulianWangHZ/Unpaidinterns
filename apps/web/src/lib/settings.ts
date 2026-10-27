@@ -1,6 +1,7 @@
 import { agentKindSchema, type AgentKind, type Session, type Task } from '@unpaidinterns/core';
 import { z } from 'zod';
 import { create } from 'zustand';
+import type { Theme } from './theme.js';
 
 export const HIDDEN_AGENTS_KEY = 'unpaidinterns.hiddenAgents';
 const hiddenSchema = z.array(agentKindSchema);
@@ -37,6 +38,8 @@ interface SettingsStore {
   hiddenAgents: AgentKind[];
   toggleAgent(agent: AgentKind): void;
   setHiddenAgents(hidden: AgentKind[]): void;
+  theme: Theme;
+  setTheme(theme: Theme): void;
 }
 
 export const useSettingsStore = create<SettingsStore>()((set) => ({
@@ -48,4 +51,6 @@ export const useSettingsStore = create<SettingsStore>()((set) => ({
         : [...state.hiddenAgents, agent],
     })),
   setHiddenAgents: (hiddenAgents) => set({ hiddenAgents }),
+  theme: 'day',
+  setTheme: (theme) => set({ theme }),
 }));

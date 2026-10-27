@@ -91,10 +91,9 @@ export const office: SceneDefinition = {
     resting: { body: '#b8c4e8', headwear: 'none', headwearColor: '#000000', extra: 'none' },
     trouble: { body: null, headwear: 'none', headwearColor: '#000000', extra: 'none' },
   },
-  lighting: 'night',
   characterScale: 1.3,
   nameTags: true,
-  cameraTarget: [0, 5.6, 0],
-  cameraOffset: [0, 3.2, 47],
+  cameraTarget: [0, 6.4, 0],
+  cameraOffset: [0, 9, 47],
   closeOffset: [0, 1.6, 7.5],
 };

@@ -74,9 +74,9 @@
   },
   "office": {
     "floor": {
-      "top": "頂層",
-      "middle": "中層",
-      "ground": "底層"
+      "top": "3F",
+      "middle": "2F",
+      "ground": "1F"
     },
     "room": {
       "claude": "Claude 房",
@@ -102,7 +102,10 @@
     "pipOpen": "開啟子母畫面",
     "pipClose": "關閉子母畫面",
     "pipActive": "正在子母畫面中顯示。",
-    "pipUnsupported": "需要 Chrome 或 Edge 116 以上。"
+    "pipUnsupported": "需要 Chrome 或 Edge 116 以上。",
+    "theme": "外觀",
+    "day": "白天",
+    "night": "夜晚"
   },
   "summary": {
     "label": "Agent 狀態",

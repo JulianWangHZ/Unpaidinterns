@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Route } from '../lib/route.js';
+import { PipButton } from './settings/PipButton.js';
 import { SettingsMenu } from './settings/SettingsMenu.js';
 import { ViewTabs } from './ViewTabs.js';
 
@@ -11,7 +12,10 @@ export function ViewBar({ route, children, className = '' }: { route: Route; chi
         <ViewTabs route={route} />
         {children}
       </div>
-      <SettingsMenu />
+      <div className="view-bar-end">
+        <PipButton />
+        <SettingsMenu />
+      </div>
     </div>
   );
 }

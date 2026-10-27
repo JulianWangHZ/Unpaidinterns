@@ -6,6 +6,7 @@ import { OfficeShell } from './office/OfficeShell.js';
 interface EnvironmentProps {
   scene: SceneDefinition;
   seatCount: number;
+  time: 'day' | 'night';
 }
 
 function deepestSeat(scene: SceneDefinition, seatCount: number): number {
@@ -29,10 +30,10 @@ function Tree({ at, scale = 1 }: { at: [number, number, number]; scale?: number 
 }
 
 /** The office is a cut-away tower: three floors, five rooms, seen from the open front. */
-function OfficeTower() {
+function OfficeTower({ time }: EnvironmentProps) {
   return (
     <group>
-      <OfficeShell />
+      <OfficeShell time={time} />
       <OfficeDecor />
     </group>
   );

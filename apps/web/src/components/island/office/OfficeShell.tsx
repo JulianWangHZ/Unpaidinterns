@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { BUILDING, FLOOR_HEIGHT, FLOOR_TAG, FLOORS, ROOMS, STAIR_OPENING, type Room } from '../../../lib/scenes/office.js';
 import { slabAround } from '../../../lib/scenes/slab.js';
-import { cityViewTexture, nightFacade } from '../textures.js';
+import { cityViewTexture, facade, nightFacade } from '../textures.js';
+import { Rooftop } from './Rooftop.js';
 import { FRAME, ROOM_ACCENT, WALL, WALL_LOW, WOOD } from './palette.js';
 
 const SLAB = 0.26;
@@ -10,6 +11,8 @@ const WINDOW_BOTTOM = 1.0;
 const WINDOW_TOP = 2.75;
 
 const SLAB_EDGE = 0.2;
+
+type Time = 'day' | 'night';
 
 function Slab({ y, floor, accentRooms }: { y: number; floor: number; accentRooms: Room[] }) {
   const full = { x1: BUILDING.left, x2: BUILDING.right, z1: BUILDING.back, z2: BUILDING.front };
@@ -89,11 +92,11 @@ function StairwellRail() {
   );
 }
 
-function BackWall({ room, seed }: { room: Room; seed: number }) {
+function BackWall({ room, seed, time }: { room: Room; seed: number; time: Time }) {
   const y = room.floor * FLOOR_HEIGHT;
   const width = room.right - room.left;
   const x = (room.left + room.right) / 2;
-  const view = cityViewTexture(seed);
+  const view = cityViewTexture(seed, time);
   const panes = Math.max(2, Math.round(width / 2.2));
   const z = BUILDING.back + WALL_DEPTH / 2;
   return (
@@ -124,7 +127,7 @@ function BackWall({ room, seed }: { room: Room; seed: number }) {
   );
 }
 
-function CeilingLights({ room }: { room: Room }) {
+function CeilingLights({ room, time }: { room: Room; time: Time }) {
   const y = room.floor * FLOOR_HEIGHT + FLOOR_HEIGHT - SLAB - 0.06;
   const width = room.right - room.left;
   const bars = Math.max(2, Math.round(width / 3.2));
@@ -137,7 +140,8 @@ function CeilingLights({ room }: { room: Room }) {
           <meshBasicMaterial color="#fff3dc" />
         </mesh>
       ))}
-      <pointLight position={[x, y - 0.5, 0.6]} color="#ffd6a3" intensity={width * 3.2} distance={width + 4} decay={1.6} />
+      {/* Office lights still glow by day, just less: daylight does most of the work. */}
+      <pointLight position={[x, y - 0.5, 0.6]} color="#ffd6a3" intensity={width * (time === 'night' ? 3.2 : 1.2)} distance={width + 4} decay={1.6} />
     </group>
   );
 }
@@ -151,39 +155,69 @@ function Divider({ floor }: { floor: number }) {
   );
 }
 
-/** The sides and roof seen from outside, with lit windows so the tower belongs to the night city. */
-function Exterior() {
+/** Floor-to-ceiling glass with slim mullions, so each side of the tower is see-through. */
+function GlassSide({ x, time }: { x: number; time: Time }) {
   const height = FLOORS * FLOOR_HEIGHT;
-  const side = useMemo(() => nightFacade(2, 3), []);
+  const depth = BUILDING.front - BUILDING.back;
+  const mullions = 2;
+  // Light aluminium by day so the side reads as glass, the dark frame colour at night.
+  const frame = time === 'night' ? FRAME : '#b4bdd6';
   return (
-    <group>
-      {[BUILDING.left - 0.15, BUILDING.right + 0.15].map((x) => (
-        <mesh key={x} position={[x, height / 2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[0.3, height, BUILDING.front - BUILDING.back]} />
-          <meshStandardMaterial color="#ffffff" map={side} emissiveMap={side} emissive="#ffffff" emissiveIntensity={0.6} />
+    <group position={[x, 0, 0]}>
+      <mesh position={[0, height / 2, 0]}>
+        <boxGeometry args={[0.04, height, depth]} />
+        <meshPhysicalMaterial color={time === 'night' ? '#9fb4ff' : '#cfe6ff'} transparent opacity={time === 'night' ? 0.12 : 0.22} roughness={0.05} metalness={0.1} />
+      </mesh>
+      {Array.from({ length: mullions + 1 }, (_, i) => (
+        <mesh key={`v${i}`} position={[0, height / 2, BUILDING.back + (i * depth) / mullions]}>
+          <boxGeometry args={[0.07, height, 0.05]} />
+          <meshStandardMaterial color={frame} roughness={0.5} metalness={0.3} />
         </mesh>
       ))}
-      <mesh position={[0, height + 0.25, 0]} castShadow>
-        <boxGeometry args={[BUILDING.right - BUILDING.left + 0.6, 0.5, BUILDING.front - BUILDING.back + 0.3]} />
-        <meshStandardMaterial color={FRAME} />
-      </mesh>
-      <mesh position={[-6, height + 1.1, -0.8]} castShadow>
-        <cylinderGeometry args={[0.7, 0.7, 1.3, 16]} />
-        <meshStandardMaterial color="#3a3468" />
-      </mesh>
-      <mesh position={[6.5, height + 1.6, -1]}>
-        <cylinderGeometry args={[0.04, 0.04, 2.4, 6]} />
-        <meshStandardMaterial color="#9aa0c8" />
-      </mesh>
-      <mesh position={[6.5, height + 2.85, -1]}>
-        <sphereGeometry args={[0.1, 10, 8]} />
-        <meshBasicMaterial color="#ff5d6c" />
-      </mesh>
+      {Array.from({ length: FLOORS + 1 }, (_, floor) => (
+        <mesh key={`h${floor}`} position={[0, floor * FLOOR_HEIGHT - SLAB / 2, 0]}>
+          <boxGeometry args={[0.1, SLAB, depth + 0.02]} />
+          <meshStandardMaterial color={frame} roughness={0.5} metalness={0.3} />
+        </mesh>
+      ))}
     </group>
   );
 }
 
-export function OfficeShell() {
+/**
+ * Outer skin on the back of the tower. Seen from behind it is a plain window facade, and it hides the
+ * inside faces of the back walls and slabs, which share a plane and would otherwise flicker.
+ */
+function BackFacade({ time }: { time: Time }) {
+  const width = BUILDING.right - BUILDING.left + 0.2;
+  const height = FLOORS * FLOOR_HEIGHT + SLAB;
+  const map = useMemo(() => (time === 'night' ? nightFacade(5, 1.25) : facade(5, 1.25)), [time]);
+  return (
+    <mesh position={[0, height / 2 - SLAB, BUILDING.back - 0.08]}>
+      <boxGeometry args={[width, height, 0.12]} />
+      {time === 'night' ? (
+        <meshStandardMaterial color="#ffffff" map={map} emissiveMap={map} emissive="#ffffff" emissiveIntensity={0.7} />
+      ) : (
+        <meshStandardMaterial color="#c9d3ec" map={map} roughness={0.8} />
+      )}
+    </mesh>
+  );
+}
+
+/** Glass sides, back skin and the roof seen from outside. */
+function Exterior({ time }: { time: Time }) {
+  const height = FLOORS * FLOOR_HEIGHT;
+  return (
+    <group>
+      <GlassSide x={BUILDING.left - 0.06} time={time} />
+      <GlassSide x={BUILDING.right + 0.06} time={time} />
+      <BackFacade time={time} />
+      <Rooftop time={time} />
+    </group>
+  );
+}
+
+export function OfficeShell({ time }: { time: Time }) {
   const rooms = Object.values(ROOMS);
   return (
     <group>
@@ -196,14 +230,14 @@ export function OfficeShell() {
       </mesh>
       {rooms.map((room, index) => (
         <group key={room.id}>
-          <BackWall room={room} seed={41 + index * 7} />
-          <CeilingLights room={room} />
+          <BackWall room={room} seed={41 + index * 7} time={time} />
+          <CeilingLights room={room} time={time} />
         </group>
       ))}
       <StairwellRail />
       <Divider floor={1} />
       <Divider floor={2} />
-      <Exterior />
+      <Exterior time={time} />
     </group>
   );
 }

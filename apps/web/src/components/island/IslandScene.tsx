@@ -19,6 +19,7 @@ import { useIslandStore } from './island-store.js';
 import { OfficeLabels } from './office/OfficeLabels.js';
 import { PulseRing } from './PulseRing.js';
 import { skyTexture } from './textures.js';
+import { useSettingsStore } from '../../lib/settings.js';
 
 interface SceneProps {
   scene: SceneDefinition;
@@ -27,6 +28,8 @@ interface SceneProps {
   placements: Map<string, Placement>;
   seats: Map<string, SeatIndex>;
   reducedMotion: boolean;
+  /** False while the office is hidden behind another view: the scene stops drawing frames. */
+  active?: boolean;
   /** Container for label overlays; it exists before the canvas, so labels never have to remount. */
   htmlPortal: RefObject<HTMLDivElement | null>;
 }
@@ -108,12 +111,13 @@ function Lights({ night }: { night: boolean }) {
   );
 }
 
-export function IslandScene({ scene, manifest, sessions, placements, seats, reducedMotion, htmlPortal }: SceneProps) {
+export function IslandScene({ scene, manifest, sessions, placements, seats, reducedMotion, htmlPortal, active = true }: SceneProps) {
   const spots = useMemo(() => spotsFor(scene, sessions, placements, seats), [scene, sessions, placements, seats]);
   // The camera stays put while a card is pinned, so the card keeps pointing at its character.
   const focus: Vec3 | null = null;
-  const night = scene.lighting === 'night';
-  const [skyTop, skyBottom] = SKIES[scene.id];
+  const time = useSettingsStore((state) => state.theme);
+  const night = time === 'night';
+  const [skyTop, skyBottom] = SKIES[scene.id][time];
 
   return (
     <Canvas
@@ -121,15 +125,16 @@ export function IslandScene({ scene, manifest, sessions, placements, seats, redu
       shadows="percentage"
       camera={{ position: [0, 7, 33], fov: 26, far: 700 }}
       dpr={[1, 2]}
+      frameloop={active ? 'always' : 'never'}
       onPointerMissed={() => useIslandStore.getState().select(null)}
     >
       <primitive attach="background" object={skyTexture(skyTop, skyBottom)} />
       <fog attach="fog" args={[skyBottom, night ? 60 : 70, night ? 200 : 230]} />
       {/* Keyed so switching scenes rebuilds the lights; R3F does not reset props that are dropped. */}
       <FitToWindow />
-      <Lights key={scene.lighting} night={night} />
-      <Backdrop scene={scene.id} />
-      <Environment scene={scene} seatCount={seats.size} />
+      <Lights key={time} night={night} />
+      <Backdrop scene={scene.id} time={time} />
+      <Environment scene={scene} seatCount={seats.size} time={time} />
       {night ? null : <ContactShadows position={[0, 0.005, 0]} scale={30} blur={2} opacity={0.18} far={2} />}
       {ACTIVITIES.map((activity) => (
         <ActivityProps key={activity} scene={scene.id} activity={activity} position={scene.activities[activity]} />

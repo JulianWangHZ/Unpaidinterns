@@ -1,6 +1,8 @@
 import { useMemo, type ReactNode } from 'react';
 import { buildBackdropTowers, buildSkyline, seeded } from '../../lib/scenes/skyline.js';
 import type { SceneId } from '../../lib/scenes/types.js';
+import { ParkingLot } from './city/ParkingLot.js';
+import { Street } from './city/Street.js';
 import { facade, nightFacade } from './textures.js';
 
 const STREET = -60;
@@ -43,37 +45,45 @@ function Clouds({ seed, height, spread }: { seed: number; height: number; spread
   );
 }
 
-function NightTower({ x, z, width, depth, top }: { x: number; z: number; width: number; depth: number; top: number }) {
-  const map = useMemo(() => nightFacade(Math.max(1, Math.round(width / 2)), Math.max(1, Math.round(top / FLOOR_UNIT / 8))), [width, top]);
+type Time = 'day' | 'night';
+
+function SkylineTower({ x, z, width, depth, top, time }: { x: number; z: number; width: number; depth: number; top: number; time: Time }) {
+  const columns = Math.max(1, Math.round(width / 2));
+  const rows = Math.max(1, Math.round(top / FLOOR_UNIT / 8));
+  const map = useMemo(() => (time === 'night' ? nightFacade(columns, rows) : facade(columns, rows)), [time, columns, rows]);
   return (
     <mesh position={[x, top / 2, z]}>
       <boxGeometry args={[width, top, depth]} />
-      <meshStandardMaterial color="#ffffff" map={map} emissiveMap={map} emissive="#ffffff" emissiveIntensity={0.85} />
+      {time === 'night' ? (
+        <meshStandardMaterial color="#ffffff" map={map} emissiveMap={map} emissive="#ffffff" emissiveIntensity={0.85} />
+      ) : (
+        <meshStandardMaterial color="#c9d3ec" map={map} roughness={0.8} />
+      )}
     </mesh>
   );
 }
 
-/** Night skyline behind the office tower, with a dark street in front. */
-function NightCity() {
+/** The skyline behind the office tower, with the street and parking lot around it; lit windows at night, blue glass by day. */
+function City({ time }: { time: Time }) {
   const towers = useMemo(() => buildBackdropTowers(60), []);
+  const night = time === 'night';
   return (
     <>
       <mesh position={[0, -0.32, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[500, 500]} />
-        <meshStandardMaterial color="#1b1834" />
+        <meshStandardMaterial color={night ? '#1b1834' : '#b9c2d6'} />
       </mesh>
-      <mesh position={[0, -0.3, 6]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[120, 4]} />
-        <meshStandardMaterial color="#2c2850" />
-      </mesh>
+      <Street time={time} />
+      <ParkingLot time={time} />
       {towers.map((tower, index) => (
-        <NightTower key={index} {...tower} />
+        <SkylineTower key={index} {...tower} time={time} />
       ))}
+      {night ? null : <Clouds seed={5} height={30} spread={200} />}
     </>
   );
 }
 
-function Countryside() {
+function Countryside(_props: { time: Time }) {
   const hills = useMemo(() => {
     const random = seeded(21);
     return Array.from({ length: 16 }, (_, i) => {
@@ -103,7 +113,7 @@ function Countryside() {
   );
 }
 
-function Seaside() {
+function Seaside(_props: { time: Time }) {
   const islands = useMemo(() => {
     const random = seeded(31);
     return Array.from({ length: 6 }, () => ({
@@ -137,15 +147,16 @@ function Seaside() {
   );
 }
 
-const BACKDROPS: Record<SceneId, () => ReactNode> = { office: NightCity, park: Countryside, pool: Seaside };
+const BACKDROPS: Record<SceneId, (props: { time: Time }) => ReactNode> = { office: City, park: Countryside, pool: Seaside };
 
-export const SKIES: Record<SceneId, [string, string]> = {
-  office: ['#120d2b', '#4a3470'],
-  park: ['#9ccdf2', '#fdeedd'],
-  pool: ['#7cc6f0', '#e8f7fd'],
+/** Sky gradient (top, horizon) for each scene at each time of day. */
+export const SKIES: Record<SceneId, Record<Time, [string, string]>> = {
+  office: { day: ['#6fb1ec', '#e4eefb'], night: ['#120d2b', '#4a3470'] },
+  park: { day: ['#9ccdf2', '#fdeedd'], night: ['#0f1530', '#3b3a6b'] },
+  pool: { day: ['#7cc6f0', '#e8f7fd'], night: ['#0b1a33', '#2f4a72'] },
 };
 
-export function Backdrop({ scene }: { scene: SceneId }) {
+export function Backdrop({ scene, time }: { scene: SceneId; time: Time }) {
   const Scene = BACKDROPS[scene];
-  return <Scene />;
+  return <Scene time={time} />;
 }

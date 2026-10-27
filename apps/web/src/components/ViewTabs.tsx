@@ -1,7 +1,7 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { routeHash, type Route } from '../lib/route.js';
-
-const ROUTES: readonly Route[] = ['island', 'board'];
+import { Segmented } from './Segmented.js';
 
 /**
  * Office / Board switch. Buttons set the main window's hash, so the switch also works from the
@@ -9,21 +9,23 @@ const ROUTES: readonly Route[] = ['island', 'board'];
  */
 export function ViewTabs({ route }: { route: Route }) {
   const { t } = useTranslation();
+  const options = useMemo(
+    () => [
+      { value: 'island' as const, label: t('nav.island') },
+      { value: 'board' as const, label: t('nav.board') },
+    ],
+    [t],
+  );
   return (
-    <div className="seg view-tabs" role="tablist" aria-label={t('nav.label')}>
-      {ROUTES.map((value) => (
-        <button
-          key={value}
-          type="button"
-          role="tab"
-          aria-selected={route === value}
-          onClick={() => {
-            window.location.hash = routeHash(value);
-          }}
-        >
-          {t(value === 'island' ? 'nav.island' : 'nav.board')}
-        </button>
-      ))}
-    </div>
+    <Segmented
+      kind="tab"
+      className="view-tabs"
+      label={t('nav.label')}
+      options={options}
+      value={route}
+      onChange={(value) => {
+        window.location.hash = routeHash(value);
+      }}
+    />
   );
 }

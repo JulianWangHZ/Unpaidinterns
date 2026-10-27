@@ -20,10 +20,38 @@
   --font-display: 'Bricolage Grotesque Variable', 'Noto Sans TC', system-ui, sans-serif;
   --font-body: 'Noto Sans TC', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --chip: #ffffffa6;
+  --subtle: #f3f4fb;
+  --field: #ffffff;
+  --field-line: #dcdff3;
+  --card-muted: #ffffffb3;
+  --accent: #2e3150;
+  --on-accent: #ffffff;
+  color-scheme: light;
   font-family: var(--font-body);
   font-size: 14px;
   color: var(--ink);
   background: var(--sky);
+}
+
+/* Night: the interface goes dark with the scene. Brand and state colours stay the same. */
+:root[data-theme='night'] {
+  --sky: #12101f;
+  --sky-2: #221f36;
+  --ink: #ece9ff;
+  --ink-2: #9b97c2;
+  --line: #2b2842;
+  --card: #1c1a2e;
+  --needs-you-soft: #3a2a12;
+  --needs-you-ink: #ffc46b;
+  --chip: #1c1a2ecc;
+  --subtle: #262339;
+  --field: #15131f;
+  --field-line: #35314f;
+  --card-muted: #1c1a2eb3;
+  --accent: #c9c3ff;
+  --on-accent: #17142a;
+  color-scheme: dark;
 }
 
 * {
@@ -139,26 +167,84 @@ textarea {
   background: var(--sky-2);
 }
 
-.seg a,
-.view-tabs button {
-  display: flex;
+/*
+ * Sliding segmented control. The pill and the label mask move together on the same curve;
+ * transitions (not keyframes) so a second click mid-slide reverses smoothly.
+ */
+.segmented {
+  position: relative;
+  isolation: isolate;
+}
+
+.segmented > button,
+.seg-ink > span {
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 0 14px;
   border: 0;
   border-radius: 999px;
   background: none;
   color: var(--ink-2);
+  font: inherit;
   font-size: 14px;
-  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
+}
+
+.segmented > button {
+  position: relative;
+  z-index: 1;
   transition: color 150ms ease;
 }
 
-.seg a[aria-current='page'],
-.view-tabs button[aria-selected='true'] {
+@media (hover: hover) and (pointer: fine) {
+  .segmented > button:hover {
+    color: var(--ink);
+  }
+}
+
+.seg-pill {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  border-radius: 999px;
   background: var(--card);
-  color: var(--ink);
   box-shadow: 0 1px 2px #2e315014, 0 2px 6px #2e31500f;
+}
+
+/* Copy of the labels in the selected colour, clipped to the pill. */
+.seg-ink {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  padding: 3px;
+  pointer-events: none;
+}
+
+.seg-ink > span {
+  color: var(--ink);
+  cursor: default;
+}
+
+.segmented[data-settled] .seg-pill {
+  transition:
+    transform 280ms var(--ease-out),
+    width 280ms var(--ease-out);
+}
+
+.segmented[data-settled] .seg-ink {
+  transition: clip-path 280ms var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segmented[data-settled] .seg-pill,
+  .segmented[data-settled] .seg-ink {
+    transition-duration: 0ms;
+  }
 }
 
 .banner {
@@ -173,7 +259,7 @@ textarea {
   padding: 0 12px;
   border: 0;
   border-radius: 999px;
-  background: #ffffffa6;
+  background: var(--chip);
   color: var(--ink-2);
   cursor: pointer;
 }
@@ -184,7 +270,9 @@ textarea {
   position: relative;
 }
 
-.gear {
+.gear,
+.tool-button {
+  position: relative;
   display: grid;
   place-items: center;
   width: var(--control);
@@ -202,14 +290,16 @@ textarea {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .gear:hover {
+  .gear:hover,
+  .tool-button:hover:not([aria-disabled]) {
     color: var(--ink);
   }
 }
 
-.gear[data-open] {
-  background: var(--ink);
-  color: #ffffff;
+.gear[data-open],
+.tool-button[data-open] {
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 /* A quarter turn on open signals state; the transition reverses cleanly when toggled fast. */
@@ -221,7 +311,8 @@ textarea {
   rotate: 90deg;
 }
 
-.gear:active {
+.gear:active,
+.tool-button:active:not([aria-disabled]) {
   transform: scale(0.96);
 }
 
@@ -296,19 +387,12 @@ textarea {
   width: 100%;
 }
 
-.seg.full button {
-  flex: 1;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  color: var(--ink-2);
-  cursor: pointer;
-}
-
-.seg.full button[aria-checked='true'] {
-  background: var(--card);
-  color: var(--ink);
-  box-shadow: 0 1px 2px #2e315014, 0 2px 6px #2e31500f;
+.seg.full > button,
+.seg.full .seg-ink > span {
+  /* Share spare room evenly, but never squeeze a label narrower than its text. */
+  flex: 1 0 auto;
+  padding: 0 8px;
+  font-size: 13px;
 }
 
 .agent-switches {
@@ -350,7 +434,7 @@ textarea {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--card);
   box-shadow: 0 1px 2px #2e315033;
   transition: translate 160ms var(--ease-out);
 }
@@ -361,33 +445,6 @@ textarea {
 
 .switch[aria-checked='true'] span {
   translate: 14px 0;
-}
-
-.row-button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  height: var(--control);
-  padding: 0 4px;
-  border: 0;
-  border-radius: 10px;
-  background: none;
-  color: var(--ink);
-  text-align: left;
-  cursor: pointer;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .row-button:hover:not(:disabled) {
-    background: var(--sky);
-  }
-}
-
-.row-button:disabled {
-  color: var(--ink-2);
-  cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .hint {
@@ -402,6 +459,46 @@ textarea {
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 12px;
+}
+
+.view-bar-end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tool-button[aria-disabled] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Tooltip below the icon. A short delay so passing over the toolbar does not flash it. */
+.tool-button[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition:
+    opacity 120ms ease,
+    transform 120ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tool-button[data-tip]:hover::after {
+    opacity: 1;
+    transform: none;
+    transition-delay: 400ms;
+  }
 }
 
 .view-bar-start {
@@ -442,7 +539,8 @@ textarea {
   height: 28px;
 }
 
-.pip-bar .view-tabs button {
+.pip-bar .view-tabs > button,
+.pip-bar .view-tabs .seg-ink > span {
   padding: 0 10px;
   font-size: 12px;
 }
@@ -595,7 +693,7 @@ textarea {
 .empty-col {
   margin: 0;
   padding: 20px 12px;
-  border: 1.5px dashed #c9cdeb;
+  border: 1.5px dashed var(--field-line);
   border-radius: var(--radius);
   color: var(--ink-2);
   text-align: center;
@@ -619,7 +717,7 @@ textarea {
 }
 
 .kc[data-column='done'] {
-  background: #ffffffb3;
+  background: var(--card-muted);
   box-shadow: 0 1px 1px #2e31500a;
 }
 
@@ -699,7 +797,7 @@ textarea {
   overflow: hidden;
   padding: 1px 6px;
   border-radius: 6px;
-  background: #f3f4fb;
+  background: var(--subtle);
   color: var(--ink-2);
   font-family: var(--font-mono);
   font-size: 11px;
@@ -733,8 +831,8 @@ textarea {
   padding: 0 12px;
   border: 0;
   border-radius: 9px;
-  background: var(--ink);
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -746,7 +844,7 @@ textarea {
 }
 
 .btn.ghost {
-  background: #f1f2fa;
+  background: var(--subtle);
   color: var(--ink);
 }
 
@@ -778,9 +876,9 @@ textarea {
 .editor textarea {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #dcdff3;
+  border: 1px solid var(--field-line);
   border-radius: 9px;
-  background: #fff;
+  background: var(--field);
 }
 
 .row-actions {
@@ -828,7 +926,7 @@ textarea {
   overflow: auto;
   margin: 0 0 12px;
   padding: 8px 12px;
-  border: 1px solid #dcdff3;
+  border: 1px solid var(--field-line);
   border-radius: 9px;
 }
 
@@ -990,8 +1088,8 @@ textarea {
 }
 
 .scene-tabs button[aria-selected='true'] {
-  background: var(--ink);
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .overview {
@@ -1102,12 +1200,13 @@ textarea {
   height: 15px;
   padding: 2px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--card);
 }
 
+/* Tags float over the 3D scene, not the page, so they keep fixed colours in both themes. */
 .nt-state {
   background: #ffffffeb;
-  color: var(--ink);
+  color: #2e3150;
 }
 
 .nametag[data-alert] .nt-state {
@@ -1137,12 +1236,30 @@ textarea {
   pointer-events: auto;
 }
 
+/* In the small window the card sits in the bottom-left corner of the scene. */
+.session-tip.docked {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+}
+
+.session-tip.docked .agent-card {
+  width: 260px;
+  padding: 10px 12px;
+  animation-duration: 120ms;
+  transform-origin: bottom left;
+}
+
+.session-tip.docked .ac-r {
+  -webkit-line-clamp: 2;
+}
+
 .agent-card {
   width: 320px;
   max-width: calc(100vw - 24px);
   padding: 12px 14px;
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--card);
   color: var(--ink);
   font-size: 12px;
   text-align: left;
@@ -1219,7 +1336,7 @@ textarea {
   overflow: hidden;
   padding: 2px 6px;
   border-radius: 6px;
-  background: #f3f4fb;
+  background: var(--subtle);
   font-family: var(--font-mono);
   font-size: 11px;
   text-overflow: ellipsis;
@@ -1327,8 +1444,8 @@ textarea {
   padding: 0 10px;
   border: 0;
   border-radius: 8px;
-  background: var(--ink);
-  color: #ffffff;
+  background: var(--accent);
+  color: var(--on-accent);
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
@@ -1341,4 +1458,22 @@ textarea {
 
 .nametag {
   position: relative;
+}
+
+/* The incoming view settles in: a short fade and a 4px rise. */
+.view-pane {
+  animation: view-in 180ms var(--ease-out);
+}
+
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-pane {
+    animation: none;
+  }
 }

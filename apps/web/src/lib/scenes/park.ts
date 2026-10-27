@@ -29,7 +29,6 @@ export const park: SceneDefinition = {
     resting: { body: null, headwear: 'none', headwearColor: '#000000', extra: 'balloon' },
     trouble: { body: '#ffe08a', headwear: 'none', headwearColor: '#000000', extra: 'clownNose' },
   },
-  lighting: 'day',
   characterScale: 1,
   nameTags: false,
   cameraTarget: [1, 1.2, 0.4],

@@ -69,14 +69,14 @@
   "scene": {
     "label": "Scene",
     "office": "Office",
-    "park": "Amusement park",
+    "park": "Theme park",
     "pool": "Pool"
   },
   "office": {
     "floor": {
-      "top": "Top floor",
-      "middle": "Middle floor",
-      "ground": "Ground floor"
+      "top": "3F",
+      "middle": "2F",
+      "ground": "1F"
     },
     "room": {
       "claude": "Claude room",
@@ -102,7 +102,10 @@
     "pipOpen": "Open in picture-in-picture",
     "pipClose": "Close picture-in-picture",
     "pipActive": "Showing in the picture-in-picture window.",
-    "pipUnsupported": "Needs Chrome or Edge 116 or newer."
+    "pipUnsupported": "Needs Chrome or Edge 116 or newer.",
+    "theme": "Appearance",
+    "day": "Day",
+    "night": "Night"
   },
   "summary": {
     "label": "Agent status",

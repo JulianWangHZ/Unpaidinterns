@@ -75,3 +75,12 @@ describe('useSettingsStore', () => {
     expect(useSettingsStore.getState().hiddenAgents).toEqual(['claude']);
   });
 });
+
+describe('theme setting', () => {
+  it('switches between day and night', () => {
+    useSettingsStore.getState().setTheme('night');
+    expect(useSettingsStore.getState().theme).toBe('night');
+    useSettingsStore.getState().setTheme('day');
+    expect(useSettingsStore.getState().theme).toBe('day');
+  });
+});

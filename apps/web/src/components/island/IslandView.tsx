@@ -44,7 +44,7 @@ function hasWebGl(): boolean {
   }
 }
 
-export default function IslandView({ route }: { route: Route }) {
+export default function IslandView({ route, active = true }: { route: Route; active?: boolean }) {
   const compact = useCompact();
   const { t } = useTranslation();
   const sessionMap = useSessionStore((state) => state.sessions);
@@ -93,6 +93,7 @@ export default function IslandView({ route }: { route: Route }) {
           placements={placements}
           seats={seats}
           reducedMotion={reducedMotion}
+          active={active}
         />
         {compact ? null : (
         <ViewBar route={route} className="stage-bar">

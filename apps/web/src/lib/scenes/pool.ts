@@ -26,7 +26,6 @@ export const pool: SceneDefinition = {
     resting: { body: null, headwear: 'none', headwearColor: '#000000', extra: 'none' },
     trouble: { body: null, headwear: 'swimcap', headwearColor: '#ffffff', extra: 'floatRing' },
   },
-  lighting: 'day',
   characterScale: 1,
   nameTags: false,
   cameraTarget: [0, 1, 0.4],

@@ -42,3 +42,22 @@ export function PipIcon({ size = 18 }: { size?: number }) {
     </svg>
   );
 }
+
+/** Line-style sun and moon for the day / night switch. */
+export function ThemeIcon({ kind, size = 15 }: { kind: 'day' | 'night'; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {kind === 'day' ? (
+        <>
+          <circle cx="12" cy="12" r="4" />
+          {Array.from({ length: 8 }, (_, i) => {
+            const a = (i / 8) * Math.PI * 2;
+            return <line key={i} x1={12 + Math.cos(a) * 7} y1={12 + Math.sin(a) * 7} x2={12 + Math.cos(a) * 9.5} y2={12 + Math.sin(a) * 9.5} />;
+          })}
+        </>
+      ) : (
+        <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+      )}
+    </svg>
+  );
+}

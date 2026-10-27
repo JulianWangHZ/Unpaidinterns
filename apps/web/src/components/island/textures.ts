@@ -75,14 +75,20 @@ export function nightFacade(columns: number, rows: number): Texture {
   return texture;
 }
 
-/** The view through the office windows: a dusk sky over a lit skyline. */
-export function cityViewTexture(seed: number): Texture {
-  return canvasTexture(`city-view:${seed}`, 512, 160, (ctx) => {
+const VIEW_PALETTE = {
+  night: { sky: ['#2a2056', '#6b4f9a', '#c48fb8'], near: '#3a3168', far: '#231d45', lit: 0.28, windows: ['#ffd28a', '#9fd8ff'] },
+  day: { sky: ['#5fa8e8', '#a9d3f5', '#e6f2fb'], near: '#8fa3c4', far: '#6f84a8', lit: 0.45, windows: ['#dff0ff', '#b9d4ee'] },
+} as const;
+
+/** The view through the office windows: a skyline under a dusk sky at night, a blue one by day. */
+export function cityViewTexture(seed: number, time: 'day' | 'night' = 'night'): Texture {
+  const palette = VIEW_PALETTE[time];
+  return canvasTexture(`city-view:${time}:${seed}`, 512, 160, (ctx) => {
     const random = seeded(seed);
     const sky = ctx.createLinearGradient(0, 0, 0, 160);
-    sky.addColorStop(0, '#2a2056');
-    sky.addColorStop(0.65, '#6b4f9a');
-    sky.addColorStop(1, '#c48fb8');
+    sky.addColorStop(0, palette.sky[0]);
+    sky.addColorStop(0.65, palette.sky[1]);
+    sky.addColorStop(1, palette.sky[2]);
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, 512, 160);
     for (let layer = 0; layer < 2; layer += 1) {
@@ -90,12 +96,12 @@ export function cityViewTexture(seed: number): Texture {
       while (x < 512) {
         const width = 18 + random() * 34;
         const height = (layer === 0 ? 40 : 70) + random() * (layer === 0 ? 60 : 70);
-        ctx.fillStyle = layer === 0 ? '#3a3168' : '#231d45';
+        ctx.fillStyle = layer === 0 ? palette.near : palette.far;
         ctx.fillRect(x, 160 - height, width, height);
         for (let wy = 160 - height + 6; wy < 156; wy += 7) {
           for (let wx = x + 3; wx < x + width - 4; wx += 6) {
-            if (random() < 0.28) {
-              ctx.fillStyle = random() < 0.8 ? '#ffd28a' : '#9fd8ff';
+            if (random() < palette.lit) {
+              ctx.fillStyle = random() < 0.8 ? palette.windows[0] : palette.windows[1];
               ctx.fillRect(wx, wy, 3, 3);
             }
           }
