@@ -31,10 +31,10 @@ function CopyResume({ session }: { session: Session }) {
 }
 
 /**
- * Everything worth knowing about one session, shown over its character.
- * Hovering shows it; clicking pins it so the copy button can be used.
+ * Everything worth knowing about one session. Over a character, hovering shows it and clicking
+ * pins it so the copy button can be used; on the board (`actions`) the copy button is always there.
  */
-export function AgentCard({ session, pinned }: { session: Session; pinned: boolean }) {
+export function AgentCard({ session, pinned, actions = false }: { session: Session; pinned: boolean; actions?: boolean }) {
   const { t, i18n } = useTranslation();
   const now = useTicker(1000);
   const group = stateGroup(session.state);
@@ -44,7 +44,7 @@ export function AgentCard({ session, pinned }: { session: Session; pinned: boole
   const title = session.title && session.title !== session.project ? session.title : null;
 
   return (
-    <div className="agent-card" data-group={group} data-pinned={pinned || undefined}>
+    <div className="agent-card" data-group={group} data-pinned={pinned || undefined} data-board={actions || undefined}>
       <header>
         <span className="ac-agent">
           <img src={AGENT_ICONS[session.agent]} alt="" width={16} height={16} />
@@ -84,7 +84,7 @@ export function AgentCard({ session, pinned }: { session: Session; pinned: boole
           {session.model ?? ''}
           {intern}
         </span>
-        {pinned ? <CopyResume session={session} /> : <span className="ac-hint">{t('card.clickToPin')}</span>}
+        {pinned || actions ? <CopyResume session={session} /> : <span className="ac-hint">{t('card.clickToPin')}</span>}
       </footer>
     </div>
   );

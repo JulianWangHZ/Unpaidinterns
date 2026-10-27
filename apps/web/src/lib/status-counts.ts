@@ -1,20 +1,32 @@
 import { stateGroup, type Session } from '@unpaidinterns/core';
 
-export interface StatusCounts {
-  needsYou: number;
-  working: number;
-  done: number;
+export type Lane = 'needsYou' | 'working' | 'done';
+
+export const LANES: readonly Lane[] = ['needsYou', 'working', 'done'];
+
+export type StatusCounts = Record<Lane, number>;
+
+/** Which headline a session falls under. Errors and interruptions need the user too. */
+export function laneOf(session: Session): Lane {
+  const group = stateGroup(session.state);
+  if (group === 'working') return 'working';
+  if (group === 'resting') return 'done';
+  return 'needsYou';
 }
 
-/** Headline counts for the top bar. Interns follow their parent, so only main agents are counted. */
+/**
+ * Main agents sorted into the three lanes, most recently active first. Interns follow their
+ * parent, so they are left out and each agent appears once.
+ */
+export function boardLanes(sessions: readonly Session[]): Record<Lane, Session[]> {
+  const lanes: Record<Lane, Session[]> = { needsYou: [], working: [], done: [] };
+  const latestFirst = sessions.filter((session) => !session.parentSessionId).sort((a, b) => b.updatedAt - a.updatedAt);
+  for (const session of latestFirst) lanes[laneOf(session)].push(session);
+  return lanes;
+}
+
+/** Headline counts for the top bar, matching the board lanes. */
 export function statusCounts(sessions: readonly Session[]): StatusCounts {
-  const counts: StatusCounts = { needsYou: 0, working: 0, done: 0 };
-  for (const session of sessions) {
-    if (session.parentSessionId) continue;
-    const group = stateGroup(session.state);
-    if (group === 'working') counts.working += 1;
-    else if (group === 'resting') counts.done += 1;
-    else counts.needsYou += 1;
-  }
-  return counts;
+  const lanes = boardLanes(sessions);
+  return { needsYou: lanes.needsYou.length, working: lanes.working.length, done: lanes.done.length };
 }

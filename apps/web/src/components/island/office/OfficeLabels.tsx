@@ -78,7 +78,7 @@ function FloorLabel({ room, sessions }: { room: Room; sessions: Session[] }) {
   );
   return (
     // Stands clear of the slab face so nothing behind it can show through.
-    <mesh position={[room.left + FLOOR_TAG.inset + FLOOR_TAG.width / 2, room.floor * FLOOR_HEIGHT - 0.14, BUILDING.front + 0.06]} renderOrder={2}>
+    <mesh position={[room.left + FLOOR_TAG.inset + FLOOR_TAG.width / 2, room.floor * FLOOR_HEIGHT + FLOOR_TAG.y, BUILDING.front + 0.06]} renderOrder={2}>
       <planeGeometry args={[FLOOR_TAG.width, FLOOR_TAG.height]} />
       <meshBasicMaterial map={texture} transparent toneMapped={false} />
     </mesh>

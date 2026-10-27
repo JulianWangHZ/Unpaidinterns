@@ -1,6 +1,6 @@
-import type { Session, Task } from '@unpaidinterns/core';
+import type { Session } from '@unpaidinterns/core';
 import { describe, expect, it } from 'vitest';
-import { HIDDEN_AGENTS_KEY, loadHiddenAgents, saveHiddenAgents, tasksForAgents, useSettingsStore, visibleSessions } from './settings.js';
+import { HIDDEN_AGENTS_KEY, loadHiddenAgents, saveHiddenAgents, useSettingsStore, visibleSessions } from './settings.js';
 
 const session = (sessionId: string, agent: Session['agent']): Session => ({
   agent,
@@ -9,18 +9,6 @@ const session = (sessionId: string, agent: Session['agent']): Session => ({
   project: 'w',
   state: 'running',
   startedAt: 0,
-  updatedAt: 0,
-});
-
-const task = (id: string, sessionIds: string[]): Task => ({
-  id,
-  title: id,
-  note: '',
-  project: '',
-  column: 'todo',
-  order: 1,
-  sessionIds,
-  createdAt: 0,
   updatedAt: 0,
 });
 
@@ -38,15 +26,6 @@ describe('visibleSessions', () => {
   it('returns the same map when nothing is hidden', () => {
     const sessions = { a: session('a', 'claude') };
     expect(visibleSessions(sessions, [])).toBe(sessions);
-  });
-});
-
-describe('tasksForAgents', () => {
-  const sessions = { x: session('x', 'codex'), y: session('y', 'claude') };
-
-  it('hides cards whose live sessions all belong to hidden agents', () => {
-    const tasks = [task('codex-only', ['x']), task('mixed', ['x', 'y']), task('none', []), task('gone', ['zzz'])];
-    expect(tasksForAgents(tasks, sessions, ['codex']).map((t) => t.id)).toEqual(['mixed', 'none', 'gone']);
   });
 });
 

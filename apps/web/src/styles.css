@@ -580,36 +580,6 @@ textarea {
   font-size: 13px;
 }
 
-/* Board in a small window: columns side by side, scrolling sideways, with tighter cards. */
-.board[data-compact] {
-  grid-template-columns: repeat(3, minmax(200px, 1fr));
-  gap: 10px;
-  overflow-x: auto;
-}
-
-.board[data-compact] .col h2 {
-  margin: 0 0 8px;
-  font-size: 13px;
-}
-
-.board[data-compact] .stack {
-  gap: 8px;
-  min-height: 60px;
-}
-
-.board[data-compact] .kc {
-  padding: 8px 10px;
-}
-
-.board[data-compact] .kc-title {
-  font-size: 12px;
-}
-
-.board[data-compact] .empty-col {
-  padding: 10px;
-  font-size: 11px;
-}
-
 .pip-placeholder {
   display: grid;
   place-items: center;
@@ -656,26 +626,6 @@ textarea {
   color: var(--needs-you-ink);
 }
 
-/* Board */
-
-.board {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--gutter);
-  align-items: start;
-}
-
-.col h2 {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  height: 20px;
-  margin: 4px 0 12px;
-  font-family: var(--font-display);
-  font-size: 15px;
-}
-
-.col h2 small,
 .group h2 small {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -683,116 +633,6 @@ textarea {
   color: var(--ink-2);
 }
 
-.stack {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-height: 120px;
-}
-
-.empty-col {
-  margin: 0;
-  padding: 20px 12px;
-  border: 1.5px dashed var(--field-line);
-  border-radius: var(--radius);
-  color: var(--ink-2);
-  text-align: center;
-}
-
-/* Card: no colour stripe; state is shown by elevation. */
-
-.kc {
-  position: relative;
-  padding: 12px 14px;
-  border-radius: var(--radius);
-  background: var(--card);
-  box-shadow: 0 1px 1px #2e31500a, 0 3px 8px #2e31500f, inset 0 -2px 0 #2e315008;
-  touch-action: none;
-  transition: box-shadow 200ms var(--ease-out), translate 200ms var(--ease-out);
-}
-
-.kc[data-needs-you] {
-  translate: 0 -4px;
-  box-shadow: 0 2px 2px #ff9f1c1f, 0 12px 24px -6px #ff9f1c59, inset 0 -2px 0 #2e315008;
-}
-
-.kc[data-column='done'] {
-  background: var(--card-muted);
-  box-shadow: 0 1px 1px #2e31500a;
-}
-
-.kc[data-column='done'] .kc-title {
-  color: var(--ink-2);
-}
-
-.kc[data-dragging] {
-  z-index: 10;
-  scale: 1.02;
-  rotate: -1.5deg;
-  box-shadow: 0 18px 36px -10px #2e315040;
-}
-
-.kc-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.kc-title {
-  flex: 1;
-  padding: 0;
-  border: 0;
-  background: none;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.35;
-  text-align: left;
-  cursor: pointer;
-}
-
-.grip {
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: 0;
-  border-radius: 6px;
-  background: none;
-  fill: #b7bbdc;
-  cursor: grab;
-}
-
-.meta {
-  margin: 6px 0 0;
-  font-size: 12px;
-  color: var(--ink-2);
-}
-
-.sess {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 10px 0 0;
-  padding: 10px 0 0;
-  border-top: 1px solid var(--line);
-  list-style: none;
-}
-
-.s {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-
-.s[data-state='waiting'],
-.s[data-state='error'] {
-  color: var(--needs-you-ink);
-  font-weight: 500;
-}
-
-.s code,
 .tool {
   overflow: hidden;
   padding: 1px 6px;
@@ -841,111 +681,6 @@ textarea {
 
 .btn:active {
   transform: scale(0.97);
-}
-
-.btn.ghost {
-  background: var(--subtle);
-  color: var(--ink);
-}
-
-.btn.danger {
-  color: var(--danger);
-}
-
-.add {
-  width: 100%;
-  height: var(--control);
-  margin-top: 12px;
-  border: 0;
-  border-radius: 10px;
-  background: none;
-  color: var(--ink-2);
-  text-align: left;
-  cursor: pointer;
-}
-
-.add-form {
-  margin-top: 12px;
-  padding: 12px;
-  border-radius: var(--radius);
-  background: var(--card);
-}
-
-.add-form input,
-.editor input,
-.editor textarea {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--field-line);
-  border-radius: 9px;
-  background: var(--field);
-}
-
-.row-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.spacer {
-  flex: 1;
-}
-
-/* Editor dialog */
-
-.editor {
-  width: min(480px, calc(100vw - 2 * var(--gutter)));
-  padding: 20px;
-  border: 0;
-  border-radius: 18px;
-  color: var(--ink);
-  box-shadow: 0 24px 48px -12px #2e315059;
-}
-
-.editor::backdrop {
-  background: #2e315033;
-}
-
-.editor h2 {
-  margin: 0 0 16px;
-  font-family: var(--font-display);
-  font-size: 18px;
-}
-
-.editor label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 12px;
-  font-size: 12px;
-  color: var(--ink-2);
-}
-
-.editor fieldset {
-  max-height: 200px;
-  overflow: auto;
-  margin: 0 0 12px;
-  padding: 8px 12px;
-  border: 1px solid var(--field-line);
-  border-radius: 9px;
-}
-
-.editor legend {
-  padding: 0 4px;
-  font-size: 12px;
-  color: var(--ink-2);
-}
-
-.editor .pick {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  margin: 6px 0;
-  color: var(--ink);
-}
-
-.editor .pick input {
-  width: auto;
 }
 
 .error {
@@ -1003,10 +738,6 @@ textarea {
 }
 
 @media (max-width: 900px) {
-  .board {
-    grid-template-columns: 1fr;
-  }
-
   .top {
     flex-wrap: wrap;
     height: auto;
@@ -1014,16 +745,8 @@ textarea {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kc,
   .btn {
     transition: none;
-  }
-
-  .kc[data-needs-you],
-  .kc[data-dragging] {
-    translate: none;
-    scale: none;
-    rotate: none;
   }
 
   .waver-arm {
@@ -1269,10 +992,6 @@ textarea {
   animation: card-in 140ms var(--ease-out);
 }
 
-.agent-card[data-pinned] {
-  box-shadow: 0 0 0 2px var(--ink), 0 14px 32px -12px #2e315066;
-}
-
 @keyframes card-in {
   from {
     opacity: 0;
@@ -1476,4 +1195,98 @@ textarea {
   .view-pane {
     animation: none;
   }
+}
+
+/* Board: three lanes side by side, each a column of session cards. */
+.lanes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(280px, 1fr));
+  gap: var(--gutter);
+  align-items: start;
+  overflow-x: auto;
+}
+
+.lane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 18px;
+  background: var(--sky-2);
+}
+
+.lane h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lane h2 i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.lane[data-lane='needsYou'] h2 i {
+  background: var(--needs-you);
+}
+
+.lane[data-lane='working'] h2 i {
+  background: #6f9dff;
+}
+
+.lane[data-lane='done'] h2 i {
+  background: var(--done);
+}
+
+.lane h2 small {
+  margin-left: auto;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.lane-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* On the board a card fills its lane and sits flat; it does not pop in like the hover card. */
+.agent-card[data-board] {
+  width: auto;
+  max-width: none;
+  box-shadow: 0 1px 2px #2e315014, 0 2px 6px #2e31500f;
+  animation: none;
+}
+
+.lane-empty {
+  margin: 0;
+  padding: 18px 8px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--ink-2);
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .lanes {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* In the small window the lanes stay side by side and scroll sideways. */
+.lanes[data-compact] {
+  grid-template-columns: repeat(3, 250px);
+  gap: 8px;
+}
+
+.lanes[data-compact] .lane {
+  padding: 8px;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { BUILDING } from './office.js';
-import { CROSSING, lampSpots, lineRuns, LOT, parkingBays, STREET, TRAFFIC, trafficX, treeSpots, type TrafficCar } from './street.js';
+import { BUILDING, FLOOR_TAG } from './office.js';
+import { CROSSING, lampSpots, LEVEL, lineRuns, LOT, parkingBays, STREET, TRAFFIC, trafficX, treeSpots, type TrafficCar } from './street.js';
 
 const car: TrafficCar = { lane: 0, phase: 0, speed: 10, model: 'y', color: '#fff' };
 
@@ -93,5 +93,16 @@ describe('lineRuns', () => {
     const [left, right] = runs as [typeof runs[0], typeof runs[0]];
     expect(left.x - left.length / 2).toBeCloseTo(-STREET.length / 2);
     expect(right.x + right.length / 2).toBeCloseTo(STREET.length / 2);
+  });
+});
+
+describe('LEVEL', () => {
+  it('keeps the pavement below the ground-floor tag so nothing sinks into it', () => {
+    expect(LEVEL.walk).toBeLessThan(FLOOR_TAG.y - FLOOR_TAG.height / 2);
+  });
+
+  it('steps down from pavement to road to the ground below', () => {
+    expect(LEVEL.road).toBeLessThan(LEVEL.walk);
+    expect(LEVEL.base).toBeLessThan(LEVEL.road);
   });
 });

@@ -1,7 +1,10 @@
 import { BUILDING } from './office.js';
 
-/** Heights of the street surfaces. The office's ground floor sits at 0, a step above the pavement. */
-export const LEVEL = { road: -0.26, walk: -0.12, base: -0.32 } as const;
+/**
+ * Heights of the street surfaces. The office's ground floor sits at 0, raised above the pavement so
+ * the slab edge, its light strip and the 1F tag all stay clear of it.
+ */
+export const LEVEL = { road: -0.56, walk: -0.42, base: -0.62 } as const;
 
 /** Bands running left to right in front of the office: near pavement, the road, far pavement. */
 export const STREET = {

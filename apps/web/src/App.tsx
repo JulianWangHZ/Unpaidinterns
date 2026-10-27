@@ -7,7 +7,6 @@ import { CompactContext } from './components/compact.js';
 import { PipContext } from './components/settings/pip-context.js';
 import { StatusSummary } from './components/StatusSummary.js';
 import { ViewTabs } from './components/ViewTabs.js';
-import { TaskEditor } from './components/TaskEditor.js';
 import { openPipWindow, pipSupported } from './lib/pip.js';
 import { parseRoute, type Route } from './lib/route.js';
 import { loadHiddenAgents, useSettingsStore } from './lib/settings.js';
@@ -57,7 +56,6 @@ function usePictureInPicture() {
 export function App() {
   const { t } = useTranslation();
   const route = useRoute();
-  const [editing, setEditing] = useState<string | null>(null);
   const { pip, toggle, available } = usePictureInPicture();
   const theme = useSettingsStore((state) => state.theme);
 
@@ -82,7 +80,7 @@ export function App() {
     <>
       {route === 'board' ? (
         <div className="view-pane" key="board">
-          <Board route={route} onEdit={setEditing} />
+          <Board route={route} />
         </div>
       ) : null}
       {officeOpened ? (
@@ -128,7 +126,6 @@ export function App() {
           )}
         </main>
         {pip ? createPortal(compactView, pip.document.body) : null}
-        {editing ? <TaskEditor taskId={editing} onClose={() => setEditing(null)} /> : null}
       </div>
     </PipContext.Provider>
   );

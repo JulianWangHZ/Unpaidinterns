@@ -1,6 +1,7 @@
 import { useMemo, type ReactNode } from 'react';
 import { buildBackdropTowers, buildSkyline, seeded } from '../../lib/scenes/skyline.js';
 import type { SceneId } from '../../lib/scenes/types.js';
+import { LEVEL } from '../../lib/scenes/street.js';
 import { ParkingLot } from './city/ParkingLot.js';
 import { Street } from './city/Street.js';
 import { facade, nightFacade } from './textures.js';
@@ -52,8 +53,9 @@ function SkylineTower({ x, z, width, depth, top, time }: { x: number; z: number;
   const rows = Math.max(1, Math.round(top / FLOOR_UNIT / 8));
   const map = useMemo(() => (time === 'night' ? nightFacade(columns, rows) : facade(columns, rows)), [time, columns, rows]);
   return (
-    <mesh position={[x, top / 2, z]}>
-      <boxGeometry args={[width, top, depth]} />
+    // Stands on the ground below the street, not at the office floor.
+    <mesh position={[x, (top + LEVEL.base) / 2, z]}>
+      <boxGeometry args={[width, top - LEVEL.base, depth]} />
       {time === 'night' ? (
         <meshStandardMaterial color="#ffffff" map={map} emissiveMap={map} emissive="#ffffff" emissiveIntensity={0.85} />
       ) : (
@@ -69,7 +71,7 @@ function City({ time }: { time: Time }) {
   const night = time === 'night';
   return (
     <>
-      <mesh position={[0, -0.32, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[0, LEVEL.base - 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[500, 500]} />
         <meshStandardMaterial color={night ? '#1b1834' : '#b9c2d6'} />
       </mesh>

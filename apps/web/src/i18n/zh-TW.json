@@ -7,40 +7,17 @@
   "connection": {
     "reconnecting": "重新連線中…"
   },
-  "column": {
-    "todo": "待辦",
-    "doing": "進行中",
-    "done": "完成"
-  },
   "board": {
-    "add": "新增任務",
-    "addPlaceholder": "要做什麼？",
-    "create": "建立任務",
-    "cancel": "取消",
-    "emptyColumn": "把任務拖到這裡開始",
-    "saveFailed": "儲存失敗：{{message}}。看板已重新載入。"
+    "empty": {
+      "needsYou": "目前沒有人在等你",
+      "working": "目前沒有 agent 在工作",
+      "done": "還沒有完成的工作"
+    }
   },
   "card": {
-    "noAgent": "還沒指派 agent",
-    "moveToDone": "移到完成",
-    "reply": "回覆 {{agent}}",
-    "ended_one": "{{count}} 個 session 已結束",
-    "ended_other": "{{count}} 個 session 已結束",
-    "edit": "編輯「{{title}}」",
     "copyResume": "複製 resume 指令",
     "copied": "已複製",
     "clickToPin": "點一下固定"
-  },
-  "editor": {
-    "heading": "編輯任務",
-    "title": "標題",
-    "note": "備註",
-    "project": "專案",
-    "sessions": "Agent session",
-    "noSessions": "目前沒有進行中的 session。啟動 agent 後就會出現在這裡。",
-    "save": "儲存任務",
-    "delete": "刪除任務",
-    "cancel": "取消"
   },
   "state": {
     "thinking": "思考中",

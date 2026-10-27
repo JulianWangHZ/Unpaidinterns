@@ -52,7 +52,7 @@ test('keeps the office scene alive across a trip to the board', async ({ page })
   await expect(canvas).toBeVisible();
   await canvas.evaluate((element) => element.setAttribute('data-first', ''));
   await page.getByRole('tab', { name: 'Board' }).click();
-  await expect(page.getByRole('heading', { name: /To do/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Needs you/ })).toBeVisible();
   await expect(canvas).toBeHidden();
   await page.getByRole('tab', { name: 'Office' }).click();
   await expect(page.locator('.island-stage canvas[data-first]')).toBeVisible();

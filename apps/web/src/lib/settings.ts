@@ -1,4 +1,4 @@
-import { agentKindSchema, type AgentKind, type Session, type Task } from '@unpaidinterns/core';
+import { agentKindSchema, type AgentKind, type Session } from '@unpaidinterns/core';
 import { z } from 'zod';
 import { create } from 'zustand';
 import type { Theme } from './theme.js';
@@ -11,14 +11,6 @@ type SessionMap = Readonly<Record<string, Session>>;
 export function visibleSessions(sessions: SessionMap, hidden: readonly AgentKind[]): SessionMap {
   if (hidden.length === 0) return sessions;
   return Object.fromEntries(Object.entries(sessions).filter(([, session]) => !hidden.includes(session.agent)));
-}
-
-/** Cards stay visible unless every live session bound to them belongs to a hidden agent. */
-export function tasksForAgents(tasks: readonly Task[], sessions: SessionMap, hidden: readonly AgentKind[]): Task[] {
-  return tasks.filter((task) => {
-    const agents = task.sessionIds.flatMap((id) => (sessions[id] ? [sessions[id].agent] : []));
-    return agents.length === 0 || !agents.every((agent) => hidden.includes(agent));
-  });
 }
 
 export function loadHiddenAgents(storage: Pick<Storage, 'getItem'>): AgentKind[] {

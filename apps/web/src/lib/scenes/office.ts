@@ -6,8 +6,8 @@ export const FLOORS = 3;
 export const BUILDING = { left: -9.8, right: 9.8, back: -2.3, front: 2.3 } as const;
 export const DESKS_PER_ROOM = 8;
 
-/** The floor tag on each slab edge: where it sits from the room's left wall, and how wide it is. */
-export const FLOOR_TAG = { inset: 0.15, width: 4.1, height: 0.46 } as const;
+/** The floor tag on each slab edge: where it sits from the room's left wall, its size, and its centre below the floor. */
+export const FLOOR_TAG = { inset: 0.15, width: 4.1, height: 0.46, y: -0.14 } as const;
 
 /** The rec-room stair runs along the back wall from the ground floor up into the lounge. */
 export const STAIR = { from: [4.4, 0, -1.55] as const, to: [7.6, FLOOR_HEIGHT, -1.55] as const, width: 0.95 };
