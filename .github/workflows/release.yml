@@ -2,6 +2,8 @@ name: Release
 
 # When a pull request is merged into main, cut a release from its title:
 # feat -> minor, fix/perf -> patch, "!" or "BREAKING CHANGE" -> major, anything else -> no release.
+# The workflow only tags and publishes; it never pushes to main, so it works with branch protection.
+# The plugin manifest has no version, so installed plugins follow main's commits on their own.
 on:
   pull_request:
     types: [closed]
@@ -21,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
           fetch-depth: 0
 
       - name: Work out the next version
@@ -29,36 +31,17 @@ jobs:
         env:
           TITLE: ${{ github.event.pull_request.title }}
         run: |
-          current="$(jq -r .version plugin/.claude-plugin/plugin.json)"
           latest_tag="$(git tag --list 'v*' --sort=-v:refname | head -n 1)"
           base="${latest_tag#v}"
-          base="${base:-$current}"
-          next="$(bash .github/scripts/next-version.sh "$TITLE" "$base")"
-          # Before the first tag, count from the version the plugin already declares.
+          next="$(bash .github/scripts/next-version.sh "$TITLE" "${base:-0.0.0}")"
           [ -n "$next" ] || echo "No release for: $TITLE"
           echo "next=$next" >> "$GITHUB_OUTPUT"
 
-      - name: Bump the plugin version
+      - name: Tag the merge commit and publish the release
         if: steps.version.outputs.next != ''
         env:
           NEXT: ${{ steps.version.outputs.next }}
-        run: |
-          current="$(jq -r .version plugin/.claude-plugin/plugin.json)"
-          if [ "$current" != "$NEXT" ]; then
-            jq --arg v "$NEXT" '.version = $v' plugin/.claude-plugin/plugin.json > plugin.json.tmp
-            mv plugin.json.tmp plugin/.claude-plugin/plugin.json
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -am "chore: release v$NEXT"
-            git push origin HEAD:main
-          fi
-
-      - name: Tag and publish the release
-        if: steps.version.outputs.next != ''
-        env:
-          NEXT: ${{ steps.version.outputs.next }}
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          git tag "v$NEXT"
-          git push origin "v$NEXT"
-          gh release create "v$NEXT" --title "v$NEXT" --generate-notes --verify-tag
+          gh release create "v$NEXT" --target "$SHA" --title "v$NEXT" --generate-notes
