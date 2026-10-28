@@ -7,6 +7,8 @@
     "node": ">=22"
   },
   "scripts": {
+    "build": "pnpm --filter @unpaidinterns/web build",
+    "start": "pnpm --filter @unpaidinterns/server exec tsx src/main.ts",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
     "typecheck": "pnpm -r exec tsc --noEmit",

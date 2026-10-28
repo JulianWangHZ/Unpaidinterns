@@ -1,0 +1,12 @@
+{
+  "name": "unpaidinterns",
+  "description": "The Unpaidinterns dashboard for Claude Code",
+  "owner": { "name": "Unpaidinterns" },
+  "plugins": [
+    {
+      "name": "unpaidinterns",
+      "source": "./plugin",
+      "description": "Open a local 3D dashboard that shows every Claude Code and Codex session on your machine."
+    }
+  ]
+}

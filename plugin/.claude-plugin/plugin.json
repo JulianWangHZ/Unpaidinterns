@@ -1,0 +1,10 @@
+{
+  "name": "unpaidinterns",
+  "version": "0.1.0",
+  "description": "Open a local 3D dashboard that shows every Claude Code and Codex session on your machine.",
+  "author": { "name": "Unpaidinterns" },
+  "homepage": "https://github.com/JulianWangHZ/Unpaidinterns",
+  "repository": "https://github.com/JulianWangHZ/Unpaidinterns",
+  "license": "MIT",
+  "keywords": ["dashboard", "agents", "sessions", "3d"]
+}
