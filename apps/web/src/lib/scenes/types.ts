@@ -16,6 +16,8 @@ export interface Spot {
   seated?: boolean;
   /** Sits astride, legs either side, as on a carousel horse. */
   astride?: boolean;
+  /** Swims laps along z between these two points, turning at each end. */
+  lap?: { from: number; to: number; seconds: number };
   /**
    * The character rides a moving seat. `position` is then where it boards; once there it follows
    * the seat, whose pose comes from the ride's own timing.
@@ -57,6 +59,10 @@ export interface SceneDefinition {
   rides?: Readonly<Partial<Record<Activity, { id: RideId; seats: number; board: number; centre: Vec3 }>>>;
   /** Fixed seats for furniture people sit on in a row, such as a sofa. Extra people stand around it. */
   activitySeats?: Readonly<Partial<Record<Activity, readonly Spot[]>>>;
+  /** Long-idle agents doze off; outdoor scenes keep them going round the attractions instead. */
+  naps?: boolean;
+  /** What working agents do at their spot instead of desk work, e.g. swim laps. */
+  workPose?: Pose;
   outfits: Readonly<Record<StateGroup, Outfit>>;
   /** Characters are scaled up indoors so they read clearly behind desks and monitors. */
   characterScale: number;

@@ -118,6 +118,19 @@ function animate(rig: Rig, pose: Pose, t: number, seated: boolean, walking: bool
       rig.armL.rotation.x = Math.sin(t * 10) * 0.9;
       rig.armR.rotation.x = -Math.sin(t * 10) * 0.9;
       break;
+    case 'swim': {
+      // Front crawl: arms windmill in turn, legs flutter, the body bobs and rolls a little.
+      const stroke = t * 5;
+      rig.body.rotation.x = 0.35;
+      rig.body.rotation.z = Math.sin(stroke) * 0.12;
+      rig.armL.rotation.x = -Math.PI + ((stroke % (Math.PI * 2)) - Math.PI);
+      rig.armR.rotation.x = -Math.PI + (((stroke + Math.PI) % (Math.PI * 2)) - Math.PI);
+      rig.legL.rotation.x = Math.sin(t * 14) * 0.35;
+      rig.legR.rotation.x = -Math.sin(t * 14) * 0.35;
+      rig.head.rotation.y = Math.sin(stroke) * 0.25;
+      rig.root.position.y = Math.sin(t * 2.5) * 0.03;
+      break;
+    }
     case 'nap': {
       // Sitting and nodding off: head drops forward, jerks up a little, drops again.
       const nod = Math.max(0, Math.sin(t * 0.7));

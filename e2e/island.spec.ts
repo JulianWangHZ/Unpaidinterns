@@ -93,3 +93,13 @@ test('brings the camera back to the full building after zooming or rotating', as
   expect(after.length).toBeGreaterThan(0);
   expect(Math.abs(after.length - before.length) / before.length).toBeLessThan(0.08);
 });
+
+test('clicking an agent does not count as moving the camera', async ({ page }) => {
+  await page.goto('/');
+  const tag = page.locator('.nametag').first();
+  await expect(tag).toBeVisible({ timeout: 15_000 });
+  const box = (await tag.boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height + 30);
+  await page.waitForTimeout(500);
+  await expect(page.getByRole('button', { name: 'Overview' })).toHaveCount(0);
+});

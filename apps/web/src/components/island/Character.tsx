@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { Vector3, type Group } from 'three';
 import { AGENT_NAMES } from '../../lib/agents.js';
 import type { Pose } from '../../lib/island/behavior.js';
+import { lapAt } from '../../lib/scenes/pool-layout.js';
 import { riderPose } from '../../lib/scenes/rides.js';
 import type { Outfit, Spot } from '../../lib/scenes/types.js';
 import { lookFor } from '../../lib/characters/look.js';
@@ -38,6 +39,12 @@ interface CharacterProps {
   reducedMotion: boolean;
 }
 
+function hashPhase(text: string): number {
+  let value = 2166136261;
+  for (let i = 0; i < text.length; i += 1) value = Math.imul(value ^ text.charCodeAt(i), 16777619);
+  return value >>> 0;
+}
+
 /** One agent in the scene. It walks to its spot, then plays the pose for its state. */
 export function Character({ session, spot, pose, outfit, model, nameTag, scale, htmlPortal, reducedMotion }: CharacterProps) {
   const { t } = useTranslation();
@@ -56,6 +63,8 @@ export function Character({ session, spot, pose, outfit, model, nameTag, scale, 
   const seated = spot.seated ?? DESK_SEATED.has(pose);
   const height = ((outfit.headwear === 'mascot' ? 1.12 : 1.0) - (seated ? 0.06 : 0)) * scale;
 
+  // Each swimmer starts its laps at its own point, so a lane full of them never moves in step.
+  const lapPhase = useMemo(() => (hashPhase(session.sessionId) % 1000) / 1000, [session.sessionId]);
   // Set once a rider has reached the ride; it then follows its seat until it is sent elsewhere.
   const riding = useRef<string | null>(null);
 
@@ -80,6 +89,17 @@ export function Character({ session, spot, pose, outfit, model, nameTag, scale, 
     node.rotation.x = 0;
     node.rotation.z = 0;
     target.current.set(...spot.position);
+    // A lap swimmer's spot slides up and down its lane; once in the water it just follows it.
+    const lap = spot.lap && pose === 'swim' ? lapAt(spot.lap, clock.elapsedTime, lapPhase) : null;
+    if (lap) {
+      target.current.z = lap.z;
+      if (node.position.distanceTo(target.current) < 0.6) {
+        node.position.copy(target.current);
+        node.rotation.y = lap.facing;
+        motion.current.walking = false;
+        return;
+      }
+    }
     const offset = target.current.clone().sub(node.position);
     const distance = offset.length();
     // Changing floors jumps straight there; walking would cut through the ceiling.

@@ -56,22 +56,23 @@ export function hotTubSeat(i: number): { position: Vec3; facing: number } {
 export const SPLASH_POOL = { x1: 2.6, x2: 7.4, z1: 1.2, z2: 5.6, depth: 0.7 } as const;
 
 /** Slide tower: a platform reached by stairs, from which the flume spirals down into the splash pool. */
-export const SLIDE = { tower: [8.9, 0, -0.6] as Vec3, top: 3.4, width: 0.62, riders: 4, lap: 7 } as const;
+export const SLIDE = { tower: [8.9, 0, -0.6] as Vec3, top: 3.4, width: 0.62, riders: 3, lap: 7 } as const;
+
+/** The slide tower's four legs, at the corners of its platform. */
+export const SLIDE_LEGS: readonly Vec3[] = [-0.75, 0.75].flatMap((dx) => [-0.75, 0.75].map((dz) => [SLIDE.tower[0] + dx, 0, SLIDE.tower[2] + dz] as Vec3));
 
 /**
- * Centre line of the flume, start (top platform) to end (just above the splash pool water). It
- * sweeps round in a loop over open deck, then straightens out into the pool.
+ * Centre line of the flume's floor, start (front edge of the platform) to end (just above the
+ * splash pool water): straight off the platform, one smooth quarter turn, then straight in.
  */
 export const SLIDE_POINTS: readonly Vec3[] = [
-  [8.9, SLIDE.top + 0.05, 0.1],
-  [8.6, 3.15, 1.3],
-  [9.6, 2.7, 2.4],
-  [10.2, 2.2, 1.2],
-  [9.7, 1.75, 0.0],
-  [8.4, 1.35, 0.4],
-  [7.6, 0.95, 1.7],
-  [7.0, 0.5, 2.8],
-  [6.2, WATER + 0.18, 3.6],
+  [8.9, SLIDE.top + 0.05, 0.22],
+  [8.9, 3.05, 1.0],
+  [8.85, 2.45, 1.9],
+  [8.55, 1.75, 2.85],
+  [7.9, 1.1, 3.45],
+  [7.1, 0.55, 3.6],
+  [6.3, WATER + 0.18, 3.6],
 ];
 
 export const slideCurve = new CatmullRomCurve3(SLIDE_POINTS.map((p) => new Vector3(...p)), false, 'centripetal');
@@ -136,4 +137,17 @@ export function groundDistance(a: Vec3, b: Vec3): number {
 /** Is a point (on the ground plan) inside a rectangle grown by `margin`? */
 export function inRect(p: Vec3, r: { x1: number; x2: number; z1: number; z2: number }, margin = 0): boolean {
   return p[0] > r.x1 - margin && p[0] < r.x2 + margin && p[2] > r.z1 - margin && p[2] < r.z2 + margin;
+}
+
+/**
+ * Where a lap swimmer is along its lane at a clock time: out to the far wall and back, slowing to
+ * turn at each end. Returns the z position and which way the swimmer faces.
+ */
+export function lapAt(lap: { from: number; to: number; seconds: number }, seconds: number, phase = 0): { z: number; facing: number } {
+  const t = (((seconds / lap.seconds + phase) % 1) + 1) % 1;
+  const out = t < 0.5;
+  const leg = out ? t * 2 : (t - 0.5) * 2;
+  const eased = (1 - Math.cos(leg * Math.PI)) / 2;
+  const z = out ? lap.from + (lap.to - lap.from) * eased : lap.to + (lap.from - lap.to) * eased;
+  return { z, facing: out === lap.to > lap.from ? 0 : Math.PI };
 }

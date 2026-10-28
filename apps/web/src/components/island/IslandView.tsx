@@ -68,7 +68,8 @@ export default function IslandView({ route, active = true }: { route: Route; act
 
   const hiddenAgents = useSettingsStore((state) => state.hiddenAgents);
   const sessions = useMemo(() => Object.values(visibleSessions(sessionMap, hiddenAgents)), [sessionMap, hiddenAgents]);
-  const placements = useMemo(() => placeAgents(sessions, now), [sessions, now]);
+  const naps = SCENES[sceneId].naps ?? true;
+  const placements = useMemo(() => placeAgents(sessions, now, { naps }), [sessions, now, naps]);
   const seats = useMemo(() => seatIndexes(sessions), [sessions]);
 
   if (!webGl) {

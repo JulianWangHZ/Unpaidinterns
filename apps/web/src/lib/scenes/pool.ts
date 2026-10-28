@@ -1,4 +1,4 @@
-import { BAR, barStool, CABANA, HOT_TUB, hotTubSeat, laneSpot, LOUNGERS, loungerSpot } from './pool-layout.js';
+import { BAR, barStool, CABANA, HOT_TUB, hotTubSeat, LAP_POOL, laneSpot, LOUNGERS, loungerSpot } from './pool-layout.js';
 import { RIDE_SEATS, SIT_DROP } from './rides.js';
 import type { SceneDefinition, Spot, Vec3 } from './types.js';
 
@@ -11,8 +11,10 @@ const SLIDE_QUEUE: Vec3 = [7.0, 0, -2.0];
 /** Working agents swim, one to a lane; resting ones use the bar, hot tub, slide, cabana and loungers. */
 export const pool: SceneDefinition = {
   id: 'pool',
-  // Swimmers tread water upright, so they are never drawn sitting.
-  seatAt: (index) => ({ position: laneSpot(index), facing: 0, seated: false }),
+  // Working agents swim laps of their lane; they are never drawn sitting.
+  seatAt: (index) => ({ position: laneSpot(index), facing: 0, seated: false, lap: { from: LAP_POOL.z1 + 0.7, to: LAP_POOL.z2 - 0.7, seconds: 9 + (index % 4) } }),
+  workPose: 'swim',
+  naps: false,
   activities: {
     coffee: BAR.at,
     kitchen: [6.0, 0, -3.0],

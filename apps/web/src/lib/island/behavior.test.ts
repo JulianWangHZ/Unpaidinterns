@@ -106,3 +106,18 @@ describe('seatIndexes', () => {
     ]);
   });
 });
+
+describe('placeAgents naps option', () => {
+  const idle = (id: string, minutes: number) =>
+    ({ agent: 'claude', sessionId: id, cwd: '/w', project: 'w', state: 'done', startedAt: 0, updatedAt: 1_000_000 - minutes * 60_000 }) as const;
+
+  it('sends long-idle agents to nap by default', () => {
+    expect(placeAgents([idle('a', 40)], 1_000_000).get('a')?.at).toMatchObject({ kind: 'activity', activity: 'nap' });
+  });
+
+  it('keeps long-idle agents going round the attractions when naps are off', () => {
+    const at = placeAgents([idle('a', 40)], 1_000_000, { naps: false }).get('a')?.at;
+    expect(at).toMatchObject({ kind: 'activity' });
+    expect(at && 'activity' in at ? at.activity : null).not.toBe('nap');
+  });
+});

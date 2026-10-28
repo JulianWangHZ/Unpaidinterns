@@ -19,6 +19,7 @@ export function CameraRig({ focus, overviewTarget, overviewOffset, closeOffset, 
   const controls = useRef<OrbitControlsImpl>(null);
   const { camera } = useThree();
   const goal = useRef<{ target: Vector3; position: Vector3 } | null>(null);
+  const handling = useRef(false);
   const overviewRequest = useIslandStore((state) => state.overviewRequest);
 
   useEffect(() => {
@@ -50,9 +51,16 @@ export function CameraRig({ focus, overviewTarget, overviewOffset, closeOffset, 
       minDistance={3}
       maxDistance={70}
       // Only user input fires onStart, so the glide back to the overview never counts as a move.
+      // A press alone (clicking a character) is not a move: wait until the view actually changes.
       onStart={() => {
         goal.current = null;
-        useIslandStore.getState().setCameraMoved(true);
+        handling.current = true;
+      }}
+      onChange={() => {
+        if (handling.current) useIslandStore.getState().setCameraMoved(true);
+      }}
+      onEnd={() => {
+        handling.current = false;
       }}
     />
   );

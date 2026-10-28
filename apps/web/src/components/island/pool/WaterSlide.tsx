@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { AdditiveBlending, BufferGeometry, Float32BufferAttribute, Vector3, type Mesh } from 'three';
-import { SLIDE, slideCurve, WATER } from '../../../lib/scenes/pool-layout.js';
+import { SLIDE, SLIDE_LEGS, slideCurve, SPLASH_POOL, WATER } from '../../../lib/scenes/pool-layout.js';
 import type { Vec3 } from '../../../lib/scenes/types.js';
 import { Bulb, Strut } from '../park/parts.js';
 
@@ -47,7 +47,9 @@ function flumeGeometry(radius: number, lift: number): BufferGeometry {
 
 /** Points along the flume for the supports, skipping the top section over the platform. */
 function supportPoints(): Vector3[] {
-  return Array.from({ length: 9 }, (_, i) => slideCurve.getPointAt(0.14 + i * 0.1)).filter((p) => p.y > 0.4);
+  return Array.from({ length: 6 }, (_, i) => slideCurve.getPointAt(0.18 + i * 0.13)).filter(
+    (p) => p.y > 0.4 && !(p.x > SPLASH_POOL.x1 - 0.3 && p.x < SPLASH_POOL.x2 + 0.3 && p.z > SPLASH_POOL.z1 - 0.3 && p.z < SPLASH_POOL.z2 + 0.3),
+  );
 }
 
 /** Water slide: a stair tower to a canopied platform, and a yellow flume spiralling down to the splash pool. */
@@ -68,12 +70,7 @@ export function WaterSlide({ night }: { night: boolean }) {
     }
   });
 
-  const legs: Vec3[] = [
-    [tx - 0.75, 0, tz - 0.75],
-    [tx + 0.75, 0, tz - 0.75],
-    [tx - 0.75, 0, tz + 0.75],
-    [tx + 0.75, 0, tz + 0.75],
-  ];
+  const legs = SLIDE_LEGS;
   const steps = 12;
 
   return (
@@ -85,6 +82,8 @@ export function WaterSlide({ night }: { night: boolean }) {
       {[1.1, 2.3].map((y) =>
         legs.map((leg, i) => {
           const next = legs[[1, 3, 0, 2][i] as number] as Vec3;
+          // Braces go round the sides and back only; the front, where the flume leaves, stays open.
+          if (leg[2] > tz && next[2] > tz) return null;
           return <Strut key={`${y},${i}`} from={[leg[0], y, leg[2]]} to={[next[0], y, next[2]]} radius={0.035} color="#2a74d6" />;
         }),
       )}

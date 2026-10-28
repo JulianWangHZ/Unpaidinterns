@@ -1,7 +1,7 @@
 import { stateGroup, type Session, type SessionState } from '@unpaidinterns/core';
 import type { Activity } from '../scenes/types.js';
 
-export type Pose = 'think' | 'type' | 'typeSlow' | 'wave' | 'slump' | 'sip' | 'sing' | 'play' | 'lounge' | 'workout' | 'nap';
+export type Pose = 'think' | 'type' | 'typeSlow' | 'wave' | 'slump' | 'sip' | 'sing' | 'play' | 'lounge' | 'workout' | 'nap' | 'swim';
 
 export type Spot =
   | { kind: 'desk' }
@@ -55,8 +55,13 @@ function deskPose(session: Session): Pose {
   return DESK_POSES[session.state] ?? 'sip';
 }
 
+export interface PlaceOptions {
+  /** Long-idle agents doze. Outdoor scenes turn this off so they keep using the attractions. */
+  naps?: boolean;
+}
+
 /** Decides where every agent stands and what it does. Pure, so the scene just follows it. */
-export function placeAgents(sessions: readonly Session[], now: number): Map<string, Placement> {
+export function placeAgents(sessions: readonly Session[], now: number, { naps = true }: PlaceOptions = {}): Map<string, Placement> {
   const placed = new Map<string, Placement>();
   const seatsTaken = new Map<Activity, number>();
   const sit = (sessionId: string, activity: Activity, pose: Pose) => {
@@ -73,7 +78,7 @@ export function placeAgents(sessions: readonly Session[], now: number): Map<stri
       placed.set(session.sessionId, { at: { kind: 'desk' }, pose: deskPose(session) });
     } else if (idleFor < COFFEE_MS) {
       sit(session.sessionId, 'coffee', 'sip');
-    } else if (idleFor > NAP_MS) {
+    } else if (naps && idleFor > NAP_MS) {
       sit(session.sessionId, 'nap', 'nap');
     } else {
       const spot = loungeSpot(session.sessionId, now);

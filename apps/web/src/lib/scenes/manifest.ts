@@ -44,6 +44,7 @@ const STANDARD_CLIP: Readonly<Record<Pose, string>> = {
   lounge: 'idle',
   workout: 'stretch',
   nap: 'idle',
+  swim: 'stretch',
 };
 
 export function clipFor(pose: Pose, clips: readonly string[], walking: boolean): string | null {

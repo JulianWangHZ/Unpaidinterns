@@ -8,12 +8,14 @@ import {
   groundDistance,
   HOT_TUB,
   inRect,
+  lapAt,
   LAP_POOL,
   laneSpot,
   LIFEGUARD,
   LOUNGERS,
   PALMS,
   SLIDE,
+  SLIDE_LEGS,
   slideCurve,
   slideProgress,
   slideRider,
@@ -100,6 +102,18 @@ describe('water slide', () => {
     }
   });
 
+  it('keeps the flume clear of the tower legs and only turns gently', () => {
+    let lastHeading: number | null = null;
+    for (let u = 0.02; u <= 1; u += 0.02) {
+      const p = slideCurve.getPointAt(u);
+      for (const leg of SLIDE_LEGS) expect(groundDistance([p.x, 0, p.z], leg), `u=${u.toFixed(2)}`).toBeGreaterThan(SLIDE.width / 2 + 0.15);
+      const t = slideCurve.getTangentAt(u);
+      const heading = Math.atan2(t.x, t.z);
+      if (lastHeading !== null) expect(Math.abs(heading - lastHeading)).toBeLessThan(0.25);
+      lastHeading = heading;
+    }
+  });
+
   it('spreads riders out and keeps them in order down the flume', () => {
     expect(slideProgress(0, 0)).toBe(0);
     for (const t of [1, 2.5, 4, 6]) {
@@ -142,5 +156,37 @@ describe('pool club layout', () => {
   it('sets the lifeguard chair at the side of the lap pool', () => {
     expect(LIFEGUARD[0]).toBeGreaterThan(LAP_POOL.x2);
     expect(LIFEGUARD[0] - LAP_POOL.x2).toBeLessThan(1.2);
+  });
+});
+
+describe('lapAt', () => {
+  const lap = { from: -2, to: 4, seconds: 10 };
+
+  it('swims out to the far end and back again', () => {
+    expect(lapAt(lap, 0).z).toBeCloseTo(-2);
+    expect(lapAt(lap, 5).z).toBeCloseTo(4);
+    expect(lapAt(lap, 10).z).toBeCloseTo(-2);
+  });
+
+  it('faces the way it is swimming', () => {
+    expect(lapAt(lap, 2).facing).toBe(0);
+    expect(lapAt(lap, 7).facing).toBeCloseTo(Math.PI);
+  });
+
+  it('stays inside its lane ends and starts at different points for different swimmers', () => {
+    for (let t = 0; t < 30; t += 0.25) {
+      const { z } = lapAt(lap, t, 0.37);
+      expect(z).toBeGreaterThanOrEqual(-2 - 1e-9);
+      expect(z).toBeLessThanOrEqual(4 + 1e-9);
+    }
+    expect(lapAt(lap, 1, 0.3).z).not.toBeCloseTo(lapAt(lap, 1, 0).z);
+  });
+
+  it('keeps every lap inside the pool for every lane', () => {
+    for (let i = 0; i < 60; i += 1) {
+      const spot = pool.seatAt(i, 'claude', i);
+      expect(spot.lap).toBeDefined();
+      for (const z of [spot.lap!.from, spot.lap!.to]) expect(inRect([spot.position[0], 0, z], LAP_POOL, -0.4)).toBe(true);
+    }
   });
 });

@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
-import { AdditiveBlending, Color, Object3D, type Group, type InstancedMesh } from 'three';
+import { AdditiveBlending, CatmullRomCurve3, Color, Object3D, TubeGeometry, Vector3, type Group, type InstancedMesh } from 'three';
 import {
   DECK,
   LANE_WIDTH,
@@ -228,20 +228,40 @@ function BackstrokeFlags() {
   );
 }
 
-/** Chrome pool ladder: two rails curving over the coping and down into the water, with treads. */
+/**
+ * Chrome pool ladder on the wall at (x, z). In its own frame +z points into the pool: each rail is
+ * anchored in the deck behind the coping, arches over it and drops straight down the wall into the
+ * water, with treads between the rails under the surface.
+ */
 function Ladder({ x, z, turn }: { x: number; z: number; turn: number }) {
+  const inWater = COPING + 0.1;
+  const arc = useMemo(
+    () => (side: number) => new TubeGeometry(new CatmullRomCurve3([
+      new Vector3(side, 0.02, -0.42),
+      new Vector3(side, 0.55, -0.36),
+      new Vector3(side, 0.82, -0.1),
+      new Vector3(side, 0.7, inWater - 0.04),
+      new Vector3(side, 0.35, inWater),
+    ]), 24, 0.025, 8, false),
+    [inWater],
+  );
   return (
     <group position={[x, 0, z]} rotation={[0, turn, 0]}>
       {[-0.22, 0.22].map((side) => (
         <group key={side}>
-          <Strut from={[side, -1.1, 0.12]} to={[side, 0.75, 0.12]} radius={0.025} color="#e6eaf0" />
-          <Strut from={[side, 0.75, 0.12]} to={[side, 0.8, -0.25]} radius={0.025} color="#e6eaf0" />
-          <Strut from={[side, 0.8, -0.25]} to={[side, 0.05, -0.45]} radius={0.025} color="#e6eaf0" />
+          <mesh geometry={arc(side)} castShadow>
+            <meshStandardMaterial color="#f1f4f8" metalness={0.35} roughness={0.25} />
+          </mesh>
+          <Strut from={[side, 0.36, inWater]} to={[side, WATER - 1.05, inWater]} radius={0.025} color="#e6eaf0" />
+          <mesh position={[side, 0.025, -0.42]}>
+            <cylinderGeometry args={[0.05, 0.05, 0.02, 12]} />
+            <meshStandardMaterial color="#c3c8d1" metalness={0.8} />
+          </mesh>
         </group>
       ))}
-      {[-0.35, -0.65, -0.95].map((y) => (
-        <mesh key={y} position={[0, y, 0.15]}>
-          <boxGeometry args={[0.44, 0.03, 0.12]} />
+      {[WATER - 0.3, WATER - 0.6, WATER - 0.9].map((y) => (
+        <mesh key={y} position={[0, y, inWater - 0.03]}>
+          <boxGeometry args={[0.44, 0.03, 0.1]} />
           <meshStandardMaterial color="#e6eaf0" metalness={0.8} roughness={0.25} />
         </mesh>
       ))}
@@ -437,8 +457,8 @@ export function PoolGrounds({ time }: { time: Time }) {
       <LaneRopes />
       <StartingBlocks />
       <BackstrokeFlags />
-      <Ladder x={LAP_POOL.x1 + 0.12} z={LAP_POOL.z2 - 1.2} turn={-Math.PI / 2} />
-      <Ladder x={LAP_POOL.x2 - 0.12} z={LAP_POOL.z1 + 2.4} turn={Math.PI / 2} />
+      <Ladder x={LAP_POOL.x1} z={LAP_POOL.z2 - 1.2} turn={Math.PI / 2} />
+      <Ladder x={LAP_POOL.x2} z={LAP_POOL.z1 + 2.4} turn={-Math.PI / 2} />
       <LifeguardChair />
       <Basin rect={SPLASH_POOL} depth={SPLASH_POOL.depth} colour="#5cc6e6" night={night}>
         {night ? <PoolLights rect={SPLASH_POOL} depth={SPLASH_POOL.depth} /> : null}

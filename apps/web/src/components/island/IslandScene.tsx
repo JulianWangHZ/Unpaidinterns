@@ -93,6 +93,11 @@ function Workstations(props: Omit<SceneProps, 'manifest' | 'reducedMotion' | 'ht
   );
 }
 
+/** Working agents at their spot may do the scene's own work (swimming laps) instead of desk work. */
+function workPose(scene: SceneDefinition, session: Session, pose: Placement['pose']): Placement['pose'] {
+  return scene.workPose && stateGroup(session.state) === 'working' ? scene.workPose : pose;
+}
+
 function Lights({ night }: { night: boolean }) {
   return night ? (
     <>
@@ -153,7 +158,7 @@ export function IslandScene({ scene, manifest, sessions, placements, seats, redu
             <Character
               session={session}
               spot={spot}
-              pose={placement.at.kind === 'activity' ? (scene.activityPose?.[placement.at.activity] ?? placement.pose) : placement.pose}
+              pose={placement.at.kind === 'activity' ? (scene.activityPose?.[placement.at.activity] ?? placement.pose) : workPose(scene, session, placement.pose)}
               outfit={scene.outfits[group]}
               model={character ? { url: modelUrl(scene.id, character.file), scale: character.scale } : null}
               nameTag={scene.nameTags}
