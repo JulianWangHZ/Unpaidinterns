@@ -6,6 +6,7 @@ import { DozeCorner } from './furniture/Armchair.js';
 import { BallPit } from './furniture/BallPit.js';
 import { CoffeeBar as Cafe } from './furniture/CoffeeBar.js';
 import { PoolTable } from './furniture/PoolTable.js';
+import { VILLAGE_PROPS } from './voxel/VillageProps.js';
 import { Cabana, DjBooth, GrillStation, HotTub, LoungerPair, LoungerRow, TikiBar } from './pool/Poolside.js';
 import { Bandstand, Carousel as ParkCarousel, FoodStand as ParkFoodStand, GameStall, IceCreamCart, Picnic } from './park/Stalls.js';
 
@@ -190,10 +191,11 @@ const BY_SCENE: Record<SceneId, Record<Activity, Props>> = {
     sofa: LoungerRow,
     nap: LoungerPair,
   },
+  voxel: VILLAGE_PROPS,
 };
 
 /** The office tower is built at a larger scale than the outdoor scenes, so its props are scaled up to match. */
-const PROP_SCALE: Record<SceneId, number> = { office: 1.35, park: 1, pool: 1 };
+const PROP_SCALE: Record<SceneId, number> = { office: 1.35, park: 1, pool: 1, voxel: 1 };
 
 export function ActivityProps({ scene, activity, position, night }: { scene: SceneId; activity: Activity; position: Vec3; night: boolean }) {
   const Props = BY_SCENE[scene][activity];

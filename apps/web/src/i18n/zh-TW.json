@@ -47,7 +47,8 @@
     "label": "場景",
     "office": "辦公室",
     "park": "遊樂園",
-    "pool": "游泳池"
+    "pool": "游泳池",
+    "voxel": "我的村莊"
   },
   "office": {
     "floor": {

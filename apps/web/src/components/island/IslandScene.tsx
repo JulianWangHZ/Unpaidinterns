@@ -7,6 +7,7 @@ import type { Placement, SeatIndex } from '../../lib/island/behavior.js';
 import { internSpot, spotAtActivity } from '../../lib/scenes/index.js';
 import { modelUrl, type SceneManifest } from '../../lib/scenes/manifest.js';
 import { DESKS_PER_ROOM } from '../../lib/scenes/office.js';
+import { WORKSHOP } from '../../lib/scenes/voxel/layout.js';
 import { ACTIVITIES, type SceneDefinition, type Spot, type Vec3 } from '../../lib/scenes/types.js';
 import { ActivityProps } from './ActivityProps.js';
 import { Backdrop, SKIES } from './Backdrops.js';
@@ -20,6 +21,7 @@ import { OfficeLabels } from './office/OfficeLabels.js';
 import { PulseRing } from './PulseRing.js';
 import { skyTexture } from './textures.js';
 import { useSettingsStore } from '../../lib/settings.js';
+import { CraftingTable } from './voxel/VillageProps.js';
 
 interface SceneProps {
   scene: SceneDefinition;
@@ -35,6 +37,7 @@ interface SceneProps {
 }
 
 const KINDS: readonly AgentKind[] = ['claude', 'codex', 'gemini'];
+const BENCH_ROWS = 2;
 
 function deskSpot(scene: SceneDefinition, session: Session, seat: SeatIndex): Spot {
   return scene.seatAt(seat.index, session.agent, seat.agentIndex);
@@ -79,9 +82,22 @@ function OfficeDesks({ scene, sessions, placements, seats }: Omit<SceneProps, 'm
   );
 }
 
+/** The workshop yard always shows its first two rows of benches, plus one for every agent beyond them. */
+function Benches({ scene, seats }: Omit<SceneProps, 'manifest' | 'reducedMotion' | 'htmlPortal'>) {
+  const used = Math.max(0, ...[...seats.values()].map((seat) => seat.index + 1));
+  return (
+    <>
+      {Array.from({ length: Math.max(BENCH_ROWS * WORKSHOP.columns, used) }, (_, index) => (
+        <CraftingTable key={index} spot={scene.seatAt(index, 'claude', index)} />
+      ))}
+    </>
+  );
+}
+
 function Workstations(props: Omit<SceneProps, 'manifest' | 'reducedMotion' | 'htmlPortal'>) {
   const { scene, sessions, seats } = props;
   if (scene.id === 'office') return <OfficeDesks {...props} />;
+  if (scene.id === 'voxel') return <Benches {...props} />;
   if (scene.id !== 'park') return null;
   return (
     <>
@@ -134,7 +150,7 @@ export function IslandScene({ scene, manifest, sessions, placements, seats, redu
       onPointerMissed={() => useIslandStore.getState().select(null)}
     >
       <primitive attach="background" object={skyTexture(skyTop, skyBottom)} />
-      <fog attach="fog" args={[skyBottom, night ? 60 : 70, night ? 200 : 230]} />
+      <fog attach="fog" args={[skyBottom, ...(scene.fog ?? (night ? [60, 200] : [70, 230]))]} />
       {/* Keyed so switching scenes rebuilds the lights; R3F does not reset props that are dropped. */}
       <FitToWindow />
       <Lights key={time} night={night} />
@@ -162,6 +178,7 @@ export function IslandScene({ scene, manifest, sessions, placements, seats, redu
               outfit={scene.outfits[group]}
               model={character ? { url: modelUrl(scene.id, character.file), scale: character.scale } : null}
               nameTag={scene.nameTags}
+              figure={scene.figure ?? 'mini'}
               scale={scene.characterScale}
               htmlPortal={htmlPortal}
               reducedMotion={reducedMotion}
@@ -174,6 +191,8 @@ export function IslandScene({ scene, manifest, sessions, placements, seats, redu
         overviewTarget={scene.cameraTarget}
         overviewOffset={scene.cameraOffset}
         closeOffset={scene.closeOffset}
+        terrainAt={scene.terrainAt}
+        maxDistance={scene.maxDistance}
         reducedMotion={reducedMotion}
       />
     </Canvas>

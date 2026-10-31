@@ -47,7 +47,8 @@
     "label": "Scene",
     "office": "Office",
     "park": "Theme park",
-    "pool": "Pool"
+    "pool": "Pool",
+    "voxel": "My village"
   },
   "office": {
     "floor": {

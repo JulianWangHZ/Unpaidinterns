@@ -14,6 +14,7 @@ import { riderPose } from '../../lib/scenes/rides.js';
 import type { Outfit, Spot } from '../../lib/scenes/types.js';
 import { lookFor } from '../../lib/characters/look.js';
 import { AgentBadge } from './characters/AgentBadge.js';
+import { Blocky } from './characters/Blocky.js';
 import { Mini } from './characters/Mini.js';
 import type { Motion } from './characters/motion.js';
 import { useIslandStore } from './island-store.js';
@@ -34,6 +35,8 @@ interface CharacterProps {
   outfit: Outfit;
   model: { url: string; scale: number } | null;
   nameTag: boolean;
+  /** Rounded figure, or one built from pixel-skinned blocks. */
+  figure: 'mini' | 'blocky';
   scale: number;
   htmlPortal: RefObject<HTMLDivElement | null>;
   reducedMotion: boolean;
@@ -46,7 +49,7 @@ function hashPhase(text: string): number {
 }
 
 /** One agent in the scene. It walks to its spot, then plays the pose for its state. */
-export function Character({ session, spot, pose, outfit, model, nameTag, scale, htmlPortal, reducedMotion }: CharacterProps) {
+export function Character({ session, spot, pose, outfit, model, nameTag, figure: style, scale, htmlPortal, reducedMotion }: CharacterProps) {
   const { t } = useTranslation();
   const group = useRef<Group>(null);
   const motion = useRef<Motion>({ walking: false });
@@ -113,8 +116,9 @@ export function Character({ session, spot, pose, outfit, model, nameTag, scale, 
     if (!motion.current.walking) node.rotation.y = spot.facing;
   });
 
+  const Figure = style === 'blocky' ? Blocky : Mini;
   const figure = (
-    <Mini
+    <Figure
       look={look}
       shirt={outfit.body ?? brand}
       pose={pose}
